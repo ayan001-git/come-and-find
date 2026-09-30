@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Come and Find — Trusted Supplier Catalogue</title>
+  <meta name="description" content="Come and Find connects buyers with verified suppliers in one searchable catalogue.">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#home" aria-label="Come and Find home">
+      <span class="brand-mark">C&F</span>
+      <span><strong>Come and Find</strong><small>trusted supplier catalogue</small></span>
+    </a>
+    <nav>
+      <a href="#catalog">Catalogue</a>
+      <a href="#how">How it works</a>
+      <button id="dashboardBtn" class="link-btn hidden">Dashboard</button>
+      <button id="cartBtn" class="link-btn hidden">Cart <span id="cartCount" class="badge">0</span></button>
+      <button id="authBtn" class="btn small">Sign in</button>
+      <button id="logoutBtn" class="link-btn hidden">Log out</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">KAZAKHSTAN • COMPUTER & OFFICE ACCESSORIES</p>
+        <h1>Find products. Trust the supplier. Order in one place.</h1>
+        <p class="lead">A semester MVP that turns the TSIS 1–2 concept into a working marketplace: catalogue, verified supplier information, search, cart, orders, simulated payment and admin approval.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#catalog">Browse catalogue</a>
+          <button id="heroLogin" class="btn secondary">Use demo account</button>
+        </div>
+        <div class="trust-row"><span>✓ Admin-approved listings</span><span>✓ Prices in KZT</span><span>✓ Order status tracking</span></div>
+      </div>
+      <div class="hero-card">
+        <p class="eyebrow">MVP FLOW</p>
+        <ol>
+          <li><b>Supplier</b> adds product information</li>
+          <li><b>Admin</b> reviews the listing</li>
+          <li><b>Buyer</b> searches and compares details</li>
+          <li><b>Buyer</b> orders and simulates payment</li>
+          <li><b>Supplier</b> processes and ships the order</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="catalog" class="section">
+      <div class="section-head">
+        <div><p class="eyebrow">CATALOGUE</p><h2>Approved products</h2></div>
+        <p id="catalogMeta" class="muted"></p>
+      </div>
+      <div class="filters">
+        <input id="searchInput" type="search" placeholder="Search products…">
+        <select id="categorySelect"><option value="">All categories</option></select>
+        <button id="searchBtn" class="btn">Search</button>
+      </div>
+      <div id="productGrid" class="product-grid"></div>
+    </section>
+
+    <section id="how" class="section soft">
+      <div class="section-head"><div><p class="eyebrow">WHY THIS MVP</p><h2>One workflow for three roles</h2></div></div>
+      <div class="steps">
+        <article><span>01</span><h3>Buyer</h3><p>Register, search, inspect supplier information, add products to cart, create an order and track its status.</p></article>
+        <article><span>02</span><h3>Supplier</h3><p>Add products, wait for admin approval, view related orders and move paid orders through processing and delivery.</p></article>
+        <article><span>03</span><h3>Administrator</h3><p>Review pending products, approve catalogue listings and inspect system users and project statistics.</p></article>
+      </div>
+    </section>
+
+    <section id="dashboard" class="section hidden">
+      <div class="section-head"><div><p class="eyebrow">DASHBOARD</p><h2 id="dashboardTitle">Dashboard</h2></div><p id="whoami" class="muted"></p></div>
+      <div id="dashboardContent"></div>
+    </section>
+  </main>
+
+  <footer><div><b>Come and Find</b><p>IT Project Management semester prototype • Go + REST API + PostgreSQL</p></div><p>Real payment gateway and production logistics are outside the MVP scope.</p></footer>
+
+  <dialog id="authDialog">
+    <form method="dialog" class="modal-card" onsubmit="return false">
+      <button class="modal-close" id="authClose" aria-label="Close">×</button>
+      <div class="tabs"><button type="button" id="loginTab" class="tab active">Sign in</button><button type="button" id="registerTab" class="tab">Register</button></div>
+      <div id="loginPane">
+        <h3>Welcome back</h3>
+        <label>Email<input id="loginEmail" type="email" value="buyer@example.kz"></label>
+        <label>Password<input id="loginPassword" type="password" value="Buyer123!"></label>
+        <button id="loginSubmit" class="btn full">Sign in</button>
+        <p class="hint">Demo: buyer@example.kz / Buyer123!</p>
+      </div>
+      <div id="registerPane" class="hidden">
+        <h3>Create account</h3>
+        <label>Name<input id="regName" placeholder="Your name"></label>
+        <label>Email<input id="regEmail" type="email" placeholder="name@example.kz"></label>
+        <label>Password<input id="regPassword" type="password" placeholder="At least 8 characters"></label>
+        <label>Role<select id="regRole"><option value="buyer">Buyer</option><option value="supplier">Supplier</option></select></label>
+        <label id="companyLabel" class="hidden">Company<input id="regCompany" placeholder="Company name"></label>
+        <button id="registerSubmit" class="btn full">Create account</button>
+      </div>
+      <p id="authMessage" class="message"></p>
+    </form>
+  </dialog>
+
+  <dialog id="productDialog">
+    <div class="modal-card wide">
+      <button class="modal-close" id="productClose" aria-label="Close">×</button>
+      <div id="productDetail"></div>
+    </div>
+  </dialog>
+
+  <dialog id="cartDialog">
+    <div class="modal-card wide">
+      <button class="modal-close" id="cartClose" aria-label="Close">×</button>
+      <h3>Your cart</h3>
+      <div id="cartContent"></div>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/app.js"></script>
+</body>
+</html>
