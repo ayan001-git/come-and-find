@@ -5,15 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Come and Find — Trusted Supplier Catalogue</title>
   <meta name="description" content="Come and Find connects buyers with verified suppliers in one searchable catalogue.">
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=3">
+  <link rel="stylesheet" href="/enhanced.css?v=3">
 </head>
 <body>
+  <a class="skip-link" href="#catalog">Skip to catalogue</a>
   <header class="topbar">
     <a class="brand" href="#home" aria-label="Come and Find home">
-      <span class="brand-mark">C&F</span>
-      <span><strong>Come and Find</strong><small>trusted supplier catalogue</small></span>
+      <span class="brand-logo-frame" aria-hidden="true"><img class="brand-logo" src="/assets/logo.jpg" alt="" width="1254" height="1254"></span><span class="brand-wordmark"><strong>Come <em>and</em> Find</strong><small>Smart shopping, trusted suppliers</small></span>
     </a>
-    <nav>
+    <nav aria-label="Main navigation">
       <a href="#catalog">Catalogue</a>
       <a href="#how">How it works</a>
       <button id="dashboardBtn" class="link-btn hidden">Dashboard</button>
@@ -26,17 +27,18 @@
   <main>
     <section id="home" class="hero">
       <div class="hero-copy">
+        <span class="hero-label"><span class="live-dot"></span> Built for smarter shopping</span>
         <p class="eyebrow">KAZAKHSTAN • COMPUTER & OFFICE ACCESSORIES</p>
         <h1>Find products. Trust the supplier. Order in one place.</h1>
-        <p class="lead">A semester MVP that turns the TSIS 1–2 concept into a working marketplace: catalogue, verified supplier information, search, cart, orders, simulated payment and admin approval.</p>
+        <p class="lead">Find the right computer accessories, compare trusted suppliers, and follow your order from one simple dashboard. Built for Kazakhstan.</p>
         <div class="hero-actions">
           <a class="btn" href="#catalog">Browse catalogue</a>
           <button id="heroLogin" class="btn secondary">Use demo account</button>
         </div>
-        <div class="trust-row"><span>✓ Admin-approved listings</span><span>✓ Prices in KZT</span><span>✓ Order status tracking</span></div>
+        <div class="trust-row"><span>✓ Reviewed listings</span><span>✓ Transparent KZT prices</span><span>✓ Order tracking</span></div>
       </div>
       <div class="hero-card">
-        <p class="eyebrow">MVP FLOW</p>
+        <p class="eyebrow">HOW IT WORKS</p><h3 class="flow-title">From search to delivery</h3>
         <ol>
           <li><b>Supplier</b> adds product information</li>
           <li><b>Admin</b> reviews the listing</li>
@@ -52,12 +54,18 @@
         <div><p class="eyebrow">CATALOGUE</p><h2>Approved products</h2></div>
         <p id="catalogMeta" class="muted"></p>
       </div>
-      <div class="filters">
-        <input id="searchInput" type="search" placeholder="Search products…">
+      <div class="filter-panel"><div class="filters">
+        <input id="searchInput" type="search" placeholder="Mouse under 10 thousand / мышь до 10 тысяч" maxlength="300" aria-label="Smart product search">
         <select id="categorySelect"><option value="">All categories</option></select>
+        <label>Min price, KZT<input id="minPrice" type="number" min="0" step="0.01" placeholder="0"></label><label>Max price, KZT<input id="maxPrice" type="number" min="0" step="0.01" placeholder="Any"></label><button id="clearFilters" class="ghost">Reset</button>
         <button id="searchBtn" class="btn">Search</button>
       </div>
-      <div id="productGrid" class="product-grid"></div>
+      <div class="voice-controls"><label for="voiceLanguage">Voice language</label><select id="voiceLanguage"><option value="ru-RU">Русский</option><option value="en-US">English</option><option value="kk-KZ">Қазақша (browser dependent)</option></select><button type="button" id="voiceBtn" class="ghost" aria-pressed="false" aria-describedby="voiceStatus">Voice input</button></div>
+      <p id="voiceStatus" class="voice-status" role="status" aria-live="polite">Checking voice recognition support…</p>
+      <p id="searchHint" class="muted" role="status" aria-live="polite">Try “mouse under 10 thousand” or “мышь до 10 тысяч”.</p></div>
+      <div class="catalog-toolbar"><p id="resultSummary" class="muted">Browse our collection</p><span class="catalog-hint">Curated accessories · Demo catalogue</span></div>
+      <div id="productGrid" class="product-grid" aria-live="polite"></div>
+      <div class="load-more-wrap"><button type="button" id="loadMoreBtn" class="ghost hidden">Show more products <span aria-hidden="true">↓</span></button></div>
     </section>
 
     <section id="how" class="section soft">
@@ -75,7 +83,7 @@
     </section>
   </main>
 
-  <footer><div><b>Come and Find</b><p>IT Project Management semester prototype • Go + REST API + PostgreSQL</p></div><p>Real payment gateway and production logistics are outside the MVP scope.</p></footer>
+  <footer><div><b>Come and Find</b><p>Computer and office accessories • Course demonstration</p></div><p>Demo payments only. No real charges or deliveries.</p></footer>
 
   <dialog id="authDialog">
     <form method="dialog" class="modal-card" onsubmit="return false">
@@ -83,21 +91,21 @@
       <div class="tabs"><button type="button" id="loginTab" class="tab active">Sign in</button><button type="button" id="registerTab" class="tab">Register</button></div>
       <div id="loginPane">
         <h3>Welcome back</h3>
-        <label>Email<input id="loginEmail" type="email" value="buyer@example.kz"></label>
-        <label>Password<input id="loginPassword" type="password" value="Buyer123!"></label>
+        <label>Email<input id="loginEmail" type="email" autocomplete="username" placeholder="you@example.com" required></label>
+        <label>Password<input id="loginPassword" type="password" autocomplete="current-password" placeholder="Your password" required></label>
         <button id="loginSubmit" class="btn full">Sign in</button>
-        <p class="hint">Demo: buyer@example.kz / Buyer123!</p>
+        <div class="demo-login"><p class="hint">Quick demo access — choose a role:</p><div class="demo-actions"><button type="button" class="demo-role" data-demo-role="buyer">Buyer</button><button type="button" class="demo-role" data-demo-role="supplier">Supplier</button><button type="button" class="demo-role" data-demo-role="admin">Admin</button></div><p class="hint">Demo accounts are for local coursework only.</p></div>
       </div>
       <div id="registerPane" class="hidden">
         <h3>Create account</h3>
-        <label>Name<input id="regName" placeholder="Your name"></label>
-        <label>Email<input id="regEmail" type="email" placeholder="name@example.kz"></label>
-        <label>Password<input id="regPassword" type="password" placeholder="At least 8 characters"></label>
+        <label>Name<input id="regName" placeholder="Your name" autocomplete="name" required maxlength="120"></label>
+        <label>Email<input id="regEmail" type="email" placeholder="name@example.kz" autocomplete="email" required></label>
+        <label>Password<input id="regPassword" type="password" placeholder="At least 8 characters" autocomplete="new-password" minlength="8" required></label>
         <label>Role<select id="regRole"><option value="buyer">Buyer</option><option value="supplier">Supplier</option></select></label>
         <label id="companyLabel" class="hidden">Company<input id="regCompany" placeholder="Company name"></label>
         <button id="registerSubmit" class="btn full">Create account</button>
       </div>
-      <p id="authMessage" class="message"></p>
+      <p id="authMessage" class="message" role="alert" aria-live="polite"></p>
     </form>
   </dialog>
 
@@ -111,12 +119,13 @@
   <dialog id="cartDialog">
     <div class="modal-card wide">
       <button class="modal-close" id="cartClose" aria-label="Close">×</button>
-      <h3>Your cart</h3>
+      <h3>Your cart</h3><p class="muted">One supplier per cart. Complete or clear the cart before switching suppliers.</p>
       <div id="cartContent"></div>
     </div>
   </dialog>
 
-  <div id="toast" class="toast hidden"></div>
-  <script src="/app.js"></script>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script src="/app.js?v=3"></script>
+  <script src="/voice.js?v=3"></script>
 </body>
 </html>

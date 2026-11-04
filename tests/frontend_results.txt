@@ -1,0 +1,25 @@
+PASS UI catalogue renders
+PASS UI voice starts only after click
+PASS UI voice language selected
+PASS UI transcript is editable text
+PASS UI voice finishes cleanly
+PASS UI smart interpretation rendered
+PASS UI voice query can search
+PASS UI microphone denial fallback
+PASS UI no speech fallback
+PASS UI login closes dialog
+PASS UI repeat add count
+PASS UI cart opens
+PASS UI quantity controls render
+PASS UI quantity update
+PASS UI checkout closes cart
+PASS UI buyer order renders
+PASS UI payment rendered
+PASS UI logout resets count
+PASS UI logout resets identity
+PASS UI admin controls render
+PASS UI withdraw refreshes catalogue
+PASS UI price filters render
+PASS UI unsupported browser keeps text fallback
+PASS UI no logged JavaScript errors
+UI RESULT 24 passed

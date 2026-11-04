@@ -1,46 +1,50 @@
 # Come and Find — architecture
 
-Semester marketplace demo. There are no real payments, supplier verification or deliveries.
+> Semester demonstration project. No real payments, deliveries, or verified suppliers.
+
+## Components
 
 ```text
-Browser (HTML/CSS/JavaScript)
-    | HTTP / JSON
-    v
-Go web server :8080
-    | SQL via Docker Compose service db:5432
-    v
-PostgreSQL 16
-    |
-    v
+Browser (HTML/CSS/JS)
+     | HTTP / JSON + HttpOnly session cookie
+     v
+Go server :8080 (REST-style API + static web files)
+     | SQL over Compose service DNS "db:5432"
+     v
+PostgreSQL 16 (users, suppliers, categories, products,
+               sessions, cart_items, orders, order_items)
+     |
+     v
 Docker named volume comeandfind_pgdata
 ```
 
-## Files
+- `web/index.html`, `web/styles.css`, `web/enhanced.css`: layout and responsive design.
+- `web/app.js`: page state, fetch calls, cart and dashboard rendering.
+- `web/voice.js`: browser SpeechRecognition (may depend on external browser service). Recognition is editable and text search is available as fallback.
+- `main.go`: HTTP server, auth, catalogue, cart, orders and supplier/admin handlers.
+- `management.go`: admin extensions and request protections.
+- `search.go`: rule-based RU/EN parsing (not an AI model).
+- `schema.sql`: PostgreSQL schema. `seed()` loads clearly synthetic demo data.
+- `Dockerfile`: multi-stage Go build and runtime container.
+- `docker-compose.yml`: `app` and `db` services, readiness checks, network and persistent volume.
 
-- `main.go`: server, sessions, catalogue, cart, ordering and role-based API endpoints.
-- `management.go`: administration and safety checks.
-- `search.go`: rule-based text search.
-- `schema.sql`: relational tables and indexes.
-- `web/index.html`: page markup.
-- `web/styles.css` and `web/enhanced.css`: responsive appearance.
-- `web/app.js`: frontend requests, state and UI events.
-- `web/voice.js`: browser SpeechRecognition and text-search fallback.
-- `Dockerfile`: reproducible server build.
-- `docker-compose.yml`: application, PostgreSQL, networks and persistent volume.
+## Request flow
 
-## Local run
+1. Browser fetches `/api/products`; Go queries approved products and returns JSON.
+2. Buyer logs in; backend issues an HttpOnly session cookie stored server-side.
+3. Buyer adds to cart; Go validates permissions and business rules before writing SQL.
+4. Checkout uses a database transaction to keep order items, stock and cart consistent.
+5. Payment action is simulated; no actual financial transaction occurs.
+6. Admin moderates product listings; supplier works only with owned products and orders.
 
-```powershell
-docker compose up --build -d
-docker compose ps
-```
+## Environments
 
-Open http://localhost:8080; backend health: http://localhost:8080/api/health.
+- Docker application connects to `db:5432` on the Compose network.
+- Windows host can connect to demo DB via `localhost:5433` if enabled in Compose.
+- Browser opens `http://localhost:8080`.
+- `docker compose down` preserves database data; `docker compose down -v` deletes the named volume.
+- For real deployment: move credentials and seed data out of defaults, use HTTPS, add migration management and external security review.
 
-The Go container connects to `db:5432`; Windows can access the database on `localhost:5433` in the updated compose file. The browser uses localhost:8080.
+## Test status
 
-Stop without deleting persistent database data: `docker compose down`. **Do not run `docker compose down -v` if you want to keep data.**
-
-## Limits
-
-Voice recognition depends on the browser and microphone permissions. Real concurrency tests, a complete test run against a fresh PostgreSQL database, and a production security review remain necessary. Demo credentials must never be used for a real deployment.
+JavaScript syntax and mocked voice tests were executed for the updated version. A complete CI run, browser microphone interaction, concurrent-checkout tests, and production security review are not established. See `TEST_RESULTS.md`.
