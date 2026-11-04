@@ -1,0 +1,32 @@
+# Local secrets and overrides
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local databases, backups, and logs
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.backup
+*.log
+backups/
+
+# Build and dependency artifacts
+*.exe
+*.test
+comeandfind
+node_modules/
+__pycache__/
+*.pyc
+coverage/
+dist/
+build/
+
+# Editor and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
