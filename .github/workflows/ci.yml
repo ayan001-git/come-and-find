@@ -1,0 +1,29 @@
+name: CI
+on:
+  push:
+    branches: [main, 'upgrade/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  go-and-frontend:
+    name: Go and frontend checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Go tests
+        run: go test ./...
+      - name: Go vet
+        run: go vet ./...
+      - name: JavaScript syntax
+        run: |
+          node --check web/app.js
+          node --check web/voice.js
+      - name: Voice workflow smoke tests
+        run: node tests/voice_smoke.cjs
+      - name: Docker build
+        run: docker build -t come-and-find:test .
