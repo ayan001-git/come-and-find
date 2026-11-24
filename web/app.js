@@ -114,6 +114,9 @@ function renderProducts(){
     group.sort((a,b) => Number(b.stock>0)-Number(a.stock>0) || a.price_kzt-b.price_kzt || a.id-b.id);
     return {...group[0], offerCount:group.length};
   });
+  const labels = {ru:['Моделей','Предложений'],kk:['Модельдер','Ұсыныстар'],en:['Models','Offers']}[window.cfLang];
+  $('#resultSummary').textContent = labels[0] + ': ' + display.length;
+  $('#catalogMeta').textContent = labels[1] + ': ' + display.reduce((total,p)=>total+p.offerCount,0);
   const sort=$('#sortSelect')?.value||'recommended';
   if(sort==='price-asc')display.sort((a,b)=>a.price_kzt-b.price_kzt);else if(sort==='price-desc')display.sort((a,b)=>b.price_kzt-a.price_kzt);else if(sort==='stock')display.sort((a,b)=>b.stock-a.stock);
   if(!display.length){
