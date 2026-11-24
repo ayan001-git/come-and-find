@@ -32,3 +32,9 @@ jobs:
         run: |
           docker compose up -d --build --wait
           python3 tests/api_regression.py
+      - name: Check frontend interactions
+        run: |
+          docker compose down -v
+          docker compose up -d --wait
+          npm install --no-save jsdom@26.1.0
+          node tests/frontend_dom.mjs
