@@ -54,14 +54,21 @@ Do not combine this database with an unrelated project.
 | Supplier | supplier@datapoint.kz | Supplier123! |
 | Admin | admin@comeandfind.kz | Admin123! |
 
-Synthetic course data: 12 initial products, 3 supplier profiles, 5 categories.
-Existing databases may contain extra records. Demo passwords are public test
+The demo catalogue starts with 32 seller listings for 26 catalogue models on a fresh database (39 listings after upgrading the original demo) across 9 categories and 4
+demonstration supplier profiles. New listings use recognizable computer and
+office equipment models with example KZT prices, stock counts, descriptions and
+specifications. These are coursework examples, not live store offers. Seeding
+adds missing listings without resetting stock or orders. Demo passwords are public test
 credentials, not suitable for a real deployment. COOKIE_SECURE=true requires HTTPS.
 DB_MAX_OPEN controls the connection pool (default 10).
 
 ## Implemented rules
 
 - Public catalogue/details show approved products of active suppliers.
+- Russian, Kazakh, and English interface languages can be switched in the header; the selection is saved in the browser.
+- Open Offers on Logitech M185, Samsung T7 1 TB, or Logitech Brio 300 to compare three sellers by price and stock. The selected listing is used for cart and checkout.
+- Product sorting, a browser-saved favourites list and side-by-side comparison of up to three items.
+- Product photos are linked from manufacturer and retailer image hosts. Image source pages and fallback behavior are documented in `docs/PRODUCT_IMAGE_SOURCES.md`.
 - Voice input with microphone error handling and editable text; browser support required.
 - Rule-based RU/EN smart queries: mouse under ten thousand / мышь до 10 тысяч.
 - Search, category, minimum and maximum price filters are combined. Explicit price fields override inferred prices.
@@ -112,14 +119,3 @@ No real grooming votes, sponsor approvals or peer-test results were fabricated.
 ## UI / backend refresh (4 November 2026)
 
 See `UPGRADE_NOTES_RU.md` for the full list of changes, verified checks, limitations and Windows Docker commands. The upgraded frontend adds `web/enhanced.css` and an updated voice workflow. Health endpoint: `GET /api/health`. Demo-only database port on the host is `127.0.0.1:5433` (internal `db:5432` is unchanged).
-
-## Version control and collaboration
-
-GitHub: https://github.com/ayan001-git/come-and-find
-
-- `main` is the stable project branch; major updates are reviewed in a pull request.
-- The upgrade is prepared on `upgrade/enhanced-mvp-2026-11`.
-- GitHub Actions CI validates Go tests, vet, JavaScript syntax, voice smoke checks and Docker build.
-- Never commit real `.env` values or production credentials. Demo passwords are public and **must not** be reused in production.
-- Architecture: `docs/ARCHITECTURE.md`. Assignment 8 task tracking is in the Come and Find Jira board.
-- To publish the prepared full project from Windows, run `./scripts/publish-github.ps1` in PowerShell after signing in with Git for Windows. The script clones the review branch, copies the project and pushes a commit without changing `main`.

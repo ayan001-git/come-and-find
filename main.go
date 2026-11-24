@@ -81,6 +81,7 @@ func main() {
 	mux.HandleFunc("/api/products", app.products)
 	mux.HandleFunc("/api/search/interpret", app.interpretSearch)
 	mux.HandleFunc("/api/products/", app.productByID)
+	mux.Handle("/api/cart/bundle", app.withUser(app.requireRole("buyer", http.HandlerFunc(app.addBundle))))
 	mux.Handle("/api/cart", app.withUser(http.HandlerFunc(app.cart)))
 	mux.Handle("/api/cart/", app.withUser(http.HandlerFunc(app.cartItem)))
 	mux.Handle("/api/orders", app.withUser(http.HandlerFunc(app.orders)))
@@ -162,11 +163,11 @@ func (a *App) seed() error {
 		price                       float64
 		stock                       int
 	}{
-		{"Office Keyboard K120", "Keyboards", "Reliable full-size USB keyboard for study and office work.", `{"Connection":"USB","Layout":"US/RU","Warranty":"12 months"}`, "/assets/keyboard.svg", 7990, 24},
-		{"Silent Mouse M220", "Mice", "Compact wireless mouse with quiet clicks.", `{"Connection":"2.4 GHz","Battery":"AA","Warranty":"12 months"}`, "/assets/mouse.svg", 6990, 31},
-		{"Full HD Webcam C270", "Webcams", "1080p-ready webcam for meetings, classes and calls.", `{"Resolution":"Full HD","Microphone":"Built-in","Connection":"USB"}`, "/assets/webcam.svg", 14990, 16},
-		{"Portable SSD 500 GB", "Storage", "Fast USB-C portable storage for files and project backups.", `{"Capacity":"500 GB","Interface":"USB-C","Type":"SSD"}`, "/assets/ssd.svg", 29990, 12},
-		{"24-inch IPS Monitor", "Monitors", "Full HD IPS monitor suitable for coding and office tasks.", `{"Size":"24 inch","Resolution":"1920x1080","Panel":"IPS"}`, "/assets/monitor.svg", 64990, 8},
+		{"Office Keyboard K120", "Keyboards", "Reliable full-size USB keyboard for study and office work.", `{"Connection":"USB","Layout":"US/RU","Warranty":"12 months"}`, "https://www.jbhifi.com.au/cdn/shop/products/394698-Product-0-I_92f5e9a0-1bff-47f3-a08d-5b92c3fdbbe4_1024x1024.png", 7990, 24},
+		{"Silent Mouse M220", "Mice", "Compact wireless mouse with quiet clicks.", `{"Connection":"2.4 GHz","Battery":"AA","Warranty":"12 months"}`, "https://biuropaczka.pl/media/catalog/product/6/f/6f65b020-9501-499d-be0a-6230a07e9210.jpg", 6990, 31},
+		{"Full HD Webcam C270", "Webcams", "720p webcam for meetings, classes and calls.", `{"Resolution":"HD 720p","Microphone":"Built-in","Connection":"USB"}`, "https://mercury.vtexassets.com/arquivos/ids/21723812/-SERT206012101.jpg?v=638937214185100000", 14990, 16},
+		{"Portable SSD 500 GB", "Storage", "Fast USB-C portable storage for files and project backups.", `{"Capacity":"500 GB","Interface":"USB-C","Type":"SSD"}`, "https://thumb.pccomponentes.com/w-530-530/articles/75/754958/1160-hp-p500-ssd-externo-500gb-usb-c-31-negro.jpg", 29990, 12},
+		{"24-inch IPS Monitor", "Monitors", "Full HD IPS monitor suitable for coding and office tasks.", `{"Size":"24 inch","Resolution":"1920x1080","Panel":"IPS"}`, "https://neom.kz/upload/iblock/e53/rjpdatre81gfknm3y2y12fafqtlfhn99.jpg", 64990, 8},
 	}
 	for _, p := range products {
 		_, err := tx.Exec(`INSERT INTO products(supplier_id,category_id,name,description,specs,price_kzt,stock,image_url,approved) VALUES($1,$2,$3,$4,$5::jsonb,$6,$7,$8,true)`, supplierID, catIDs[p.cat], p.name, p.desc, p.specs, p.price, p.stock, p.img)
@@ -316,7 +317,7 @@ func (a *App) products(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cat := r.URL.Query().Get("category")
-	query := `SELECT p.id,p.name,p.description,p.price_kzt,p.stock,p.image_url,c.name,s.company_name,s.id
+	query := `SELECT p.id,p.name,p.description,p.price_kzt,p.stock,p.image_url,c.name,s.company_name,s.id,md5(jsonb_build_array(p.category_id,lower(trim(p.name)),p.specs)::text),s.verified
               FROM products p JOIN categories c ON c.id=p.category_id JOIN suppliers s ON s.id=p.supplier_id
               WHERE p.approved=true AND EXISTS(SELECT 1 FROM users su WHERE su.id=s.user_id AND su.active=true)`
 	args := []any{}
@@ -381,14 +382,15 @@ func (a *App) products(w http.ResponseWriter, r *http.Request) {
 	out := []map[string]any{}
 	for rows.Next() {
 		var id, sid int64
-		var name, desc, img, cn, sn string
+		var name, desc, img, cn, sn, modelKey string
+		var verified bool
 		var price float64
 		var stock int
-		if err := rows.Scan(&id, &name, &desc, &price, &stock, &img, &cn, &sn, &sid); err != nil {
+		if err := rows.Scan(&id, &name, &desc, &price, &stock, &img, &cn, &sn, &sid, &modelKey, &verified); err != nil {
 			writeError(w, 500, "Database read error")
 			return
 		}
-		out = append(out, map[string]any{"id": id, "name": name, "description": desc, "price_kzt": price, "stock": stock, "image_url": img, "category": cn, "supplier": sn, "supplier_id": sid})
+		out = append(out, map[string]any{"id": id, "name": name, "description": desc, "price_kzt": price, "stock": stock, "image_url": img, "category": cn, "supplier": sn, "supplier_id": sid, "model_key": modelKey, "verified": verified})
 	}
 	if err := rows.Err(); err != nil {
 		writeError(w, 500, "Database read error")
@@ -422,9 +424,30 @@ func (a *App) productByID(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 500, "Database error")
 		return
 	}
+	rows, err := a.db.Query(`SELECT p.id,s.company_name,p.price_kzt,p.stock
+		FROM products source JOIN products p ON p.category_id=source.category_id
+		AND lower(trim(source.name))=lower(trim(p.name)) AND p.specs=source.specs
+		JOIN suppliers s ON s.id=p.supplier_id JOIN users u ON u.id=s.user_id
+		WHERE source.id=$1 AND p.approved AND u.active
+		ORDER BY (p.stock>0) DESC,p.price_kzt,p.id`, id)
+	if err != nil { writeError(w,500,"Database error"); return }
+	defer rows.Close()
+	type offer struct {
+		ID int64 `json:"id"`
+		Supplier string `json:"supplier"`
+		Price float64 `json:"price_kzt"`
+		Stock int `json:"stock"`
+	}
+	offers := []offer{}
+	for rows.Next() {
+		var item offer
+		if err := rows.Scan(&item.ID,&item.Supplier,&item.Price,&item.Stock); err != nil { writeError(w,500,"Database read error"); return }
+		offers = append(offers,item)
+	}
+	if err := rows.Err(); err != nil { writeError(w,500,"Database read error"); return }
 	var specsMap map[string]any
 	json.Unmarshal(specs, &specsMap)
-	writeJSON(w, 200, map[string]any{"id": id, "name": name, "description": desc, "specs": specsMap, "price_kzt": price, "stock": stock, "image_url": img, "category": cat, "supplier": map[string]any{"id": sid, "company_name": supplier, "description": sdesc, "verified": verified}})
+	writeJSON(w, 200, map[string]any{"id": id, "name": name, "description": desc, "offers": offers, "specs": specsMap, "price_kzt": price, "stock": stock, "image_url": img, "category": cat, "supplier": map[string]any{"id": sid, "company_name": supplier, "description": sdesc, "verified": verified}})
 }
 
 func (a *App) cart(w http.ResponseWriter, r *http.Request) {
