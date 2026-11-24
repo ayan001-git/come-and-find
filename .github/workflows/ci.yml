@@ -21,9 +21,14 @@ jobs:
         run: go vet ./...
       - name: JavaScript syntax
         run: |
+          node --check web/i18n.js
           node --check web/app.js
           node --check web/voice.js
       - name: Voice workflow smoke tests
         run: node tests/voice_smoke.cjs
       - name: Docker build
         run: docker build -t come-and-find:test .
+      - name: Check catalogue and orders against PostgreSQL
+        run: |
+          docker compose up -d --build --wait
+          python3 tests/api_regression.py
