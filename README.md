@@ -54,7 +54,7 @@ Do not combine this database with an unrelated project.
 | Supplier | supplier@datapoint.kz | Supplier123! |
 | Admin | admin@comeandfind.kz | Admin123! |
 
-The demo catalogue includes 33 sample listings across 9 categories and 4
+The demo catalogue starts with 26 sample listings on a fresh database (33 when upgrading the original 12 listings) across 9 categories and 4
 demonstration supplier profiles. New listings use recognizable computer and
 office equipment models with example KZT prices, stock counts, descriptions and
 specifications. These are coursework examples, not live store offers. Seeding

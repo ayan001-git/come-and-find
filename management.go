@@ -121,7 +121,9 @@ func (a *App) seedExtras() error {
 	categoryIDs := make(map[string]int64, len(categories))
 	for _, category := range categories {
 		if _, err = tx.Exec(`INSERT INTO categories(name) VALUES($1) ON CONFLICT(name) DO NOTHING`, category); err != nil { return err }
-		if err = tx.QueryRow(`SELECT id FROM categories WHERE name=$1`, category).Scan(&categoryIDs[category]); err != nil { return err }
+		var categoryID int64
+		if err = tx.QueryRow(`SELECT id FROM categories WHERE name=$1`, category).Scan(&categoryID); err != nil { return err }
+		categoryIDs[category] = categoryID
 	}
 
 	legacyPhotos := map[string]string{
