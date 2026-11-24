@@ -12,9 +12,8 @@ let speech;
 w.SpeechRecognition=class{constructor(){speech=this}start(){this.onstart?.()}stop(){this.onend?.()}abort(){this.onend?.()}};
 w.localStorage.setItem('cf-language','en');
 w.eval(fs.readFileSync(root+'/web/i18n.js','utf8'));
-w.eval(fs.readFileSync(root+'/web/app.js','utf8'));
+w.eval(['app.js','bundle.js'].map(file=>fs.readFileSync(root+'/web/'+file,'utf8')).join('\n'));
 w.eval(fs.readFileSync(root+'/web/voice.js','utf8'));
-w.eval(fs.readFileSync(root+'/web/bundle.js','utf8'));
 const wait=async pred=>{for(let i=0;i<200;i++){if(pred())return;await new Promise(r=>setTimeout(r,25))}throw Error('UI timeout')};
 let count=0;function ok(v,label){if(!v)throw Error(label);console.log('PASS UI '+label);count++}
 await wait(()=>w.document.querySelectorAll('.product-card').length===9);ok(true,'catalogue renders');
