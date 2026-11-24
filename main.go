@@ -316,7 +316,7 @@ func (a *App) products(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cat := r.URL.Query().Get("category")
-	query := `SELECT p.id,p.name,p.description,p.price_kzt,p.stock,p.image_url,c.name,s.company_name,s.id
+	query := `SELECT p.id,p.name,p.description,p.price_kzt,p.stock,p.image_url,c.name,s.company_name,s.id,md5(jsonb_build_array(p.category_id,lower(trim(p.name)),p.specs)::text),s.verified
               FROM products p JOIN categories c ON c.id=p.category_id JOIN suppliers s ON s.id=p.supplier_id
               WHERE p.approved=true AND EXISTS(SELECT 1 FROM users su WHERE su.id=s.user_id AND su.active=true)`
 	args := []any{}
@@ -381,14 +381,15 @@ func (a *App) products(w http.ResponseWriter, r *http.Request) {
 	out := []map[string]any{}
 	for rows.Next() {
 		var id, sid int64
-		var name, desc, img, cn, sn string
+		var name, desc, img, cn, sn, modelKey string
+		var verified bool
 		var price float64
 		var stock int
-		if err := rows.Scan(&id, &name, &desc, &price, &stock, &img, &cn, &sn, &sid); err != nil {
+		if err := rows.Scan(&id, &name, &desc, &price, &stock, &img, &cn, &sn, &sid, &modelKey, &verified); err != nil {
 			writeError(w, 500, "Database read error")
 			return
 		}
-		out = append(out, map[string]any{"id": id, "name": name, "description": desc, "price_kzt": price, "stock": stock, "image_url": img, "category": cn, "supplier": sn, "supplier_id": sid})
+		out = append(out, map[string]any{"id": id, "name": name, "description": desc, "price_kzt": price, "stock": stock, "image_url": img, "category": cn, "supplier": sn, "supplier_id": sid, "model_key": modelKey, "verified": verified})
 	}
 	if err := rows.Err(); err != nil {
 		writeError(w, 500, "Database read error")
@@ -422,9 +423,30 @@ func (a *App) productByID(w http.ResponseWriter, r *http.Request) {
 		writeError(w, 500, "Database error")
 		return
 	}
+	rows, err := a.db.Query(`SELECT p.id,s.company_name,p.price_kzt,p.stock
+		FROM products source JOIN products p ON p.category_id=source.category_id
+		AND lower(trim(source.name))=lower(trim(p.name)) AND p.specs=source.specs
+		JOIN suppliers s ON s.id=p.supplier_id JOIN users u ON u.id=s.user_id
+		WHERE source.id=$1 AND p.approved AND u.active
+		ORDER BY (p.stock>0) DESC,p.price_kzt,p.id`, id)
+	if err != nil { writeError(w,500,"Database error"); return }
+	defer rows.Close()
+	type offer struct {
+		ID int64 `json:"id"`
+		Supplier string `json:"supplier"`
+		Price float64 `json:"price_kzt"`
+		Stock int `json:"stock"`
+	}
+	offers := []offer{}
+	for rows.Next() {
+		var item offer
+		if err := rows.Scan(&item.ID,&item.Supplier,&item.Price,&item.Stock); err != nil { writeError(w,500,"Database read error"); return }
+		offers = append(offers,item)
+	}
+	if err := rows.Err(); err != nil { writeError(w,500,"Database read error"); return }
 	var specsMap map[string]any
 	json.Unmarshal(specs, &specsMap)
-	writeJSON(w, 200, map[string]any{"id": id, "name": name, "description": desc, "specs": specsMap, "price_kzt": price, "stock": stock, "image_url": img, "category": cat, "supplier": map[string]any{"id": sid, "company_name": supplier, "description": sdesc, "verified": verified}})
+	writeJSON(w, 200, map[string]any{"id": id, "name": name, "description": desc, "offers": offers, "specs": specsMap, "price_kzt": price, "stock": stock, "image_url": img, "category": cat, "supplier": map[string]any{"id": sid, "company_name": supplier, "description": sdesc, "verified": verified}})
 }
 
 func (a *App) cart(w http.ResponseWriter, r *http.Request) {

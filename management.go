@@ -169,6 +169,20 @@ func (a *App) seedExtras() error {
 		{"officehub", "APC Back-UPS 650VA", "Power", "Источник бесперебойного питания для роутера, компьютера и периферийных устройств.", `{"Brand":"APC","Capacity":"650 VA / 360 W","Outlets":"4","Protection":"Surge and battery backup","Warranty":"12 months"}`, "https://noventiqstore.kz/files/resized/products/00bb71a6-436c-4b77-8372-25a6b0193355default.1920x1080.png", 44990, 3},
 		{"officehub", "Logitech Brio 300", "Webcams", "Компактная Full HD веб-камера с автоэкспозицией, крышкой объектива и встроенным микрофоном.", `{"Brand":"Logitech","Resolution":"1080p at 30 fps","Connection":"USB-C","Privacy":"Integrated shutter","Microphone":"Mono with noise reduction"}`, "https://www.logitech.com/content/dam/logitech/en/products/webcams/brio-300/gallery/brio-300-gallery-graphite-4.png", 32990, 6},
 	}
+	// Additional seller listings share the same model specifications.
+	for _, item := range products {
+		switch item.name {
+		case "Logitech M185", "Samsung T7 Portable SSD 1 TB", "Logitech Brio 300":
+			for i, seller := range []string{"techline", "officehub", "datapoint"} {
+				if seller == item.supplier { continue }
+				extra := item
+				extra.supplier = seller
+				extra.price = item.price + (i-1)*500 + 200
+				extra.stock = 2+i
+				products = append(products, extra)
+			}
+		}
+	}
 	for _, p := range products {
 		s := suppliers[p.supplier]
 		var uid int64

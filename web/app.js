@@ -104,6 +104,16 @@ async function loadProducts(){
 function renderProducts(){
   const grid = $('#productGrid');
   let display=allProducts.filter(p=>!favoritesOnly||favoriteIds.includes(p.id));
+  const groups = new Map();
+  for (const offer of display) {
+    const group = groups.get(offer.model_key) || [];
+    group.push(offer);
+    groups.set(offer.model_key, group);
+  }
+  display = Array.from(groups.values(), group => {
+    group.sort((a,b) => Number(b.stock>0)-Number(a.stock>0) || a.price_kzt-b.price_kzt || a.id-b.id);
+    return {...group[0], offerCount:group.length};
+  });
   const sort=$('#sortSelect')?.value||'recommended';
   if(sort==='price-asc')display.sort((a,b)=>a.price_kzt-b.price_kzt);else if(sort==='price-desc')display.sort((a,b)=>b.price_kzt-a.price_kzt);else if(sort==='stock')display.sort((a,b)=>b.stock-a.stock);
   if(!display.length){
@@ -116,13 +126,23 @@ function renderProducts(){
   }
   const previous = visibleProductCount;
   visibleProductCount = Math.min(visibleProductCount + PAGE_SIZE, display.length);
-  const cards = display.slice(previous, visibleProductCount).map(raw=>{const p=localizeProduct(raw);const saved=favoriteIds.includes(p.id),checked=compareIds.includes(p.id),fallback=categoryArtwork[raw.category]||'/assets/product.svg';return `<article class="product-card"><div class="product-media"><img src="${esc(productImage(raw))}" alt="${esc(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'"><span class="media-tag">${esc(p.category)}</span><button class="favorite-chip ${saved?'is-favorite':''}" onclick="toggleFavorite(${p.id})" aria-label="${esc(saved?t('catalog.saved'):t('catalog.save'))}" title="${esc(saved?t('catalog.saved'):t('catalog.save'))}">${saved?'♥':'♡'}</button></div><div class="product-body"><div class="product-top"><h3>${esc(p.name)}</h3><span class="stock ${p.stock<5?'low-stock':''}">${p.stock>0?(p.stock<5?t('catalog.left'):t('catalog.inStock')):t('catalog.out')}</span></div><p class="product-description">${esc(p.description)}</p><p class="supplier-line"><span aria-hidden="true">◈</span> ${esc(p.supplier)} <span class="verified-mark">✓ ${window.cfLang==='kk'?'тексерілген':window.cfLang==='en'?'verified':'проверен'}</span></p><div class="card-bottom"><div class="price">${fmt(p.price_kzt)}</div><div class="product-actions"><button class="ghost" onclick="viewProduct(${p.id})">${esc(t('catalog.details'))}</button><button class="btn" ${p.stock<1?'disabled':''} onclick="addToCart(${p.id})">${p.stock<1?t('catalog.out'):t('catalog.add')}</button></div><label class="compare-check"><input type="checkbox" ${checked?'checked':''} onchange="toggleCompare(${p.id})"><span>${esc(t(checked?'catalog.compareRemove':'catalog.compareAdd'))}</span></label></div></div></article>`}).join('');
+  const cards = display.slice(previous, visibleProductCount).map(raw=>{const p=localizeProduct(raw);const saved=favoriteIds.includes(p.id),checked=compareIds.includes(p.id),fallback=categoryArtwork[raw.category]||'/assets/product.svg';return `<article class="product-card"><div class="product-media"><img src="${esc(productImage(raw))}" alt="${esc(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'"><span class="media-tag">${esc(p.category)}</span><button class="favorite-chip ${saved?'is-favorite':''}" onclick="toggleFavorite(${p.id})" aria-label="${esc(saved?t('catalog.saved'):t('catalog.save'))}" title="${esc(saved?t('catalog.saved'):t('catalog.save'))}">${saved?'♥':'♡'}</button></div><div class="product-body"><div class="product-top"><h3>${esc(p.name)}</h3><span class="stock ${p.stock<5?'low-stock':''}">${p.stock>0?(p.stock<5?t('catalog.left'):t('catalog.inStock')):t('catalog.out')}</span></div><p class="product-description">${esc(p.description)}</p><p class="supplier-line"><span aria-hidden="true">◈</span> ${esc(p.supplier)} ${p.verified?`<span class="verified-mark">✓ ${window.cfLang==='kk'?'тексерілген':window.cfLang==='en'?'verified':'проверен'}</span>`:''}</p><div class="card-bottom"><div class="price">${fmt(p.price_kzt)}</div><div class="product-actions"><button class="ghost" onclick="viewProduct(${p.id})">${raw.offerCount>1 ? offerTitle()+' · '+raw.offerCount : esc(t('catalog.details'))}</button><button class="btn" ${p.stock<1?'disabled':''} onclick="addToCart(${p.id})">${p.stock<1?t('catalog.out'):t('catalog.add')}</button></div><label class="compare-check"><input type="checkbox" ${checked?'checked':''} onchange="toggleCompare(${p.id})"><span>${esc(t(checked?'catalog.compareRemove':'catalog.compareAdd'))}</span></label></div></div></article>`}).join('');
   if(previous===0)grid.innerHTML=cards; else grid.insertAdjacentHTML('beforeend',cards);
   $('#loadMoreBtn').classList.toggle('hidden',visibleProductCount>=display.length);
   $('#loadMoreBtn').textContent=`${t('catalog.more')} (${display.length-visibleProductCount}) ↓`;
 }
 
-window.viewProduct=async id=>{const raw=await api('/api/products/'+id);const p=localizeProduct(raw),fallback=categoryArtwork[raw.category]||'/assets/product.svg';const specs=Object.entries(p.specs||{}).map(([k,v])=>`<div class="spec"><b>${esc(k)}</b><br><span class="muted">${esc(v)}</span></div>`).join('');const supplierDescription=window.cfLang==='en'?'Demonstration supplier of computer and office equipment.':raw.supplier.description;$('#productDetail').innerHTML=`<div class="detail"><img src="${esc(productImage(raw))}" alt="${esc(p.name)}" onerror="this.onerror=null;this.src='${fallback}'"><div><span class="chip">${esc(p.category)}</span><h2>${esc(p.name)}</h2><p class="muted">${esc(p.description)}</p><div class="price">${fmt(p.price_kzt)}</div><p class="stock">${p.stock} ${t('cart.in')}</p><div class="specs"><h3>${t('cart.specs')}</h3>${specs}</div><div class="supplier-box"><b>${t('cart.supplier')}: ${esc(p.supplier.company_name)} ${p.supplier.verified?'✓':''}</b><p>${esc(supplierDescription)}</p></div><button class="btn" ${p.stock<1?'disabled':''} onclick="addToCart(${p.id})">${p.stock<1?t('catalog.out'):t('catalog.add')}</button></div></div>`;$('#productDialog').showModal()}
+function offerTitle() {
+  return {ru:'Предложения',kk:'Ұсыныстар',en:'Offers'}[window.cfLang];
+}
+function sellerOffers(offers) {
+  return '<section class="seller-offers"><h3>'+offerTitle()+'</h3>'+offers.map(offer =>
+    `<div><strong>${esc(offer.supplier)}</strong><span>${fmt(offer.price_kzt)}</span>
+      <small>${offer.stock} ${t('cart.in')}</small><button class="btn small" data-offer="${offer.id}"
+      ${offer.stock ? '' : 'disabled'} onclick="addToCart(${offer.id})">${t('catalog.add')}</button></div>`
+  ).join('')+'</section>';
+}
+window.viewProduct=async id=>{const raw=await api('/api/products/'+id);const p=localizeProduct(raw),fallback=categoryArtwork[raw.category]||'/assets/product.svg';const specs=Object.entries(p.specs||{}).map(([k,v])=>`<div class="spec"><b>${esc(k)}</b><br><span class="muted">${esc(v)}</span></div>`).join('');const supplierDescription=window.cfLang==='en'?'Demonstration supplier of computer and office equipment.':raw.supplier.description;$('#productDetail').innerHTML=`<div class="detail"><img src="${esc(productImage(raw))}" alt="${esc(p.name)}" onerror="this.onerror=null;this.src='${fallback}'"><div><span class="chip">${esc(p.category)}</span><h2>${esc(p.name)}</h2><p class="muted">${esc(p.description)}</p><div class="price">${fmt(p.price_kzt)}</div><p class="stock">${p.stock} ${t('cart.in')}</p><div class="specs"><h3>${t('cart.specs')}</h3>${specs}</div><div class="supplier-box"><b>${t('cart.supplier')}: ${esc(p.supplier.company_name)} ${p.supplier.verified?'✓':''}</b><p>${esc(supplierDescription)}</p></div>${sellerOffers(raw.offers)}</div></div>`;$('#productDialog').showModal()}
 window.toggleFavorite=id=>{favoriteIds=favoriteIds.includes(id)?favoriteIds.filter(x=>x!==id):[...favoriteIds,id];localStorage.setItem('cf-favorites',JSON.stringify(favoriteIds));updateFavoriteCount();visibleProductCount=0;renderProducts()};
 function updateFavoriteCount(){$('#favoriteCount').textContent=favoriteIds.length;$('#favoritesBtn').setAttribute('aria-label',window.cfLang==='kk'?`Таңдаулылар: ${favoriteIds.length}`:window.cfLang==='en'?`Favourites: ${favoriteIds.length}`:`Избранное: ${favoriteIds.length}`)}
 window.toggleCompare=id=>{if(compareIds.includes(id))compareIds=compareIds.filter(x=>x!==id);else if(compareIds.length<3)compareIds.push(id);else{toast(t('catalog.compareLimit'));renderProducts();return}localStorage.setItem('cf-compare',JSON.stringify(compareIds));updateCompareBar();visibleProductCount=0;renderProducts()};

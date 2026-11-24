@@ -103,4 +103,12 @@ check('Smart length limit',call(public,'/api/search/interpret?q='+'x'*301)[0]==4
 st,over=call(public,'/api/products?search='+quote('mouse under 10000')+'&max_price=5000')
 check('Explicit price takes precedence',st==200 and all(p['price_kzt']<=5000 for p in over))
 check('Interpret GET only',call(public,'/api/search/interpret',{},'POST')[0]==405)
+model=next(p for p in products if p['name']=='Logitech M185')
+offers=call(public,f"/api/products/{model['id']}")[1]['offers']
+check('Same model from three suppliers',len({o['supplier'] for o in offers})==3)
+check('Offers sorted by price',[o['price_kzt'] for o in offers]==sorted(o['price_kzt'] for o in offers))
+selected=offers[-1]
+st,_=call(buyer,'/api/cart',{'product_id':selected['id'],'quantity':1})
+item=call(buyer,'/api/cart')[1]['items'][0]
+check('Selected seller offer in cart',st==200 and item['id']==selected['id'] and item['price_kzt']==selected['price_kzt'])
 print(f'RESULT: {sum(ok for _,ok in results)}/{len(results)} passed');raise SystemExit(0 if all(ok for _,ok in results) else 1)
