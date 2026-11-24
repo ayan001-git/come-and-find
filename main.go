@@ -162,11 +162,11 @@ func (a *App) seed() error {
 		price                       float64
 		stock                       int
 	}{
-		{"Office Keyboard K120", "Keyboards", "Reliable full-size USB keyboard for study and office work.", `{"Connection":"USB","Layout":"US/RU","Warranty":"12 months"}`, "/assets/keyboard.svg", 7990, 24},
-		{"Silent Mouse M220", "Mice", "Compact wireless mouse with quiet clicks.", `{"Connection":"2.4 GHz","Battery":"AA","Warranty":"12 months"}`, "/assets/mouse.svg", 6990, 31},
-		{"Full HD Webcam C270", "Webcams", "1080p-ready webcam for meetings, classes and calls.", `{"Resolution":"Full HD","Microphone":"Built-in","Connection":"USB"}`, "/assets/webcam.svg", 14990, 16},
-		{"Portable SSD 500 GB", "Storage", "Fast USB-C portable storage for files and project backups.", `{"Capacity":"500 GB","Interface":"USB-C","Type":"SSD"}`, "/assets/ssd.svg", 29990, 12},
-		{"24-inch IPS Monitor", "Monitors", "Full HD IPS monitor suitable for coding and office tasks.", `{"Size":"24 inch","Resolution":"1920x1080","Panel":"IPS"}`, "/assets/monitor.svg", 64990, 8},
+		{"Office Keyboard K120", "Keyboards", "Reliable full-size USB keyboard for study and office work.", `{"Connection":"USB","Layout":"US/RU","Warranty":"12 months"}`, "https://www.jbhifi.com.au/cdn/shop/products/394698-Product-0-I_92f5e9a0-1bff-47f3-a08d-5b92c3fdbbe4_1024x1024.png", 7990, 24},
+		{"Silent Mouse M220", "Mice", "Compact wireless mouse with quiet clicks.", `{"Connection":"2.4 GHz","Battery":"AA","Warranty":"12 months"}`, "https://biuropaczka.pl/media/catalog/product/6/f/6f65b020-9501-499d-be0a-6230a07e9210.jpg", 6990, 31},
+		{"Full HD Webcam C270", "Webcams", "720p webcam for meetings, classes and calls.", `{"Resolution":"HD 720p","Microphone":"Built-in","Connection":"USB"}`, "https://mercury.vtexassets.com/arquivos/ids/21723812/-SERT206012101.jpg?v=638937214185100000", 14990, 16},
+		{"Portable SSD 500 GB", "Storage", "Fast USB-C portable storage for files and project backups.", `{"Capacity":"500 GB","Interface":"USB-C","Type":"SSD"}`, "https://thumb.pccomponentes.com/w-530-530/articles/75/754958/1160-hp-p500-ssd-externo-500gb-usb-c-31-negro.jpg", 29990, 12},
+		{"24-inch IPS Monitor", "Monitors", "Full HD IPS monitor suitable for coding and office tasks.", `{"Size":"24 inch","Resolution":"1920x1080","Panel":"IPS"}`, "https://neom.kz/upload/iblock/e53/rjpdatre81gfknm3y2y12fafqtlfhn99.jpg", 64990, 8},
 	}
 	for _, p := range products {
 		_, err := tx.Exec(`INSERT INTO products(supplier_id,category_id,name,description,specs,price_kzt,stock,image_url,approved) VALUES($1,$2,$3,$4,$5::jsonb,$6,$7,$8,true)`, supplierID, catIDs[p.cat], p.name, p.desc, p.specs, p.price, p.stock, p.img)

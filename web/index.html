@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Come and Find — Trusted Supplier Catalogue</title>
-  <meta name="description" content="Come and Find connects buyers with verified suppliers in one searchable catalogue.">
-  <link rel="stylesheet" href="/styles.css?v=3">
-  <link rel="stylesheet" href="/enhanced.css?v=3">
+  <title>Come and Find — каталог техники</title>
+  <meta name="description" content="Каталог техники и аксессуаров с поиском, избранным и сравнением товаров.">
+  <link rel="stylesheet" href="/styles.css?v=4">
+  <link rel="stylesheet" href="/enhanced.css?v=4">
 </head>
 <body>
   <a class="skip-link" href="#catalog">Skip to catalogue</a>
@@ -15,65 +15,64 @@
       <span class="brand-logo-frame" aria-hidden="true"><img class="brand-logo" src="/assets/logo.jpg" alt="" width="1254" height="1254"></span><span class="brand-wordmark"><strong>Come <em>and</em> Find</strong><small>Smart shopping, trusted suppliers</small></span>
     </a>
     <nav aria-label="Main navigation">
-      <a href="#catalog">Catalogue</a>
-      <a href="#how">How it works</a>
-      <button id="dashboardBtn" class="link-btn hidden">Dashboard</button>
-      <button id="cartBtn" class="link-btn hidden">Cart <span id="cartCount" class="badge">0</span></button>
-      <button id="authBtn" class="btn small">Sign in</button>
-      <button id="logoutBtn" class="link-btn hidden">Log out</button>
+      <a href="#catalog" data-i18n="nav.catalog">Каталог</a>
+      <a href="#how" data-i18n="nav.how">Как это работает</a>
+      <button id="dashboardBtn" class="link-btn hidden" data-i18n="nav.dashboard">Кабинет</button>
+      <button id="cartBtn" class="link-btn hidden"><span data-i18n="nav.cart">Корзина</span> <span id="cartCount" class="badge">0</span></button>
+      <button id="favoritesBtn" class="link-btn" type="button" aria-label="Избранное">♡ <span data-i18n="nav.favorites">Избранное</span> <span id="favoriteCount">0</span></button>
+      <label class="language-picker"><span class="sr-only">Language</span><select id="languageSelect" aria-label="Language"><option value="ru">Русский</option><option value="kk">Қазақша</option><option value="en">English</option></select></label>
+      <button id="authBtn" class="btn small" data-i18n="nav.login">Войти</button>
+      <button id="logoutBtn" class="link-btn hidden" data-i18n="nav.logout">Выйти</button>
     </nav>
   </header>
 
   <main>
     <section id="home" class="hero">
       <div class="hero-copy">
-        <span class="hero-label"><span class="live-dot"></span> Built for smarter shopping</span>
-        <p class="eyebrow">KAZAKHSTAN • COMPUTER & OFFICE ACCESSORIES</p>
-        <h1>Find products. Trust the supplier. Order in one place.</h1>
-        <p class="lead">Find the right computer accessories, compare trusted suppliers, and follow your order from one simple dashboard. Built for Kazakhstan.</p>
+        <span class="hero-label"><span class="live-dot"></span><span data-i18n="hero.badge">Умные покупки с доверием</span></span>
+        <p class="eyebrow" data-i18n="hero.eyebrow">КАЗАХСТАН • ТЕХНИКА И АКСЕССУАРЫ</p>
+        <h1 data-i18n="hero.title">Найдите нужное. Проверьте продавца. Закажите в одном месте.</h1>
+        <p class="lead" data-i18n="hero.lead">Сравнивайте технику и аксессуары от проверенных продавцов.</p>
         <div class="hero-actions">
-          <a class="btn" href="#catalog">Browse catalogue</a>
-          <button id="heroLogin" class="btn secondary">Use demo account</button>
+          <a class="btn" href="#catalog" data-i18n="hero.browse">Открыть каталог</a>
+          <button id="heroLogin" class="btn secondary" data-i18n="hero.demo">Демо-вход</button>
         </div>
-        <div class="trust-row"><span>✓ Reviewed listings</span><span>✓ Transparent KZT prices</span><span>✓ Order tracking</span></div>
+        <div class="trust-row"><span data-i18n="hero.trust1">✓ Проверенные карточки</span><span data-i18n="hero.trust2">✓ Цены в тенге</span><span data-i18n="hero.trust3">✓ Статус заказа онлайн</span></div>
       </div>
       <div class="hero-card">
-        <p class="eyebrow">HOW IT WORKS</p><h3 class="flow-title">From search to delivery</h3>
+        <p class="eyebrow" data-i18n="hero.workflow">КАК ЭТО РАБОТАЕТ</p><h3 class="flow-title" data-i18n="hero.flowTitle">От поиска до доставки</h3>
         <ol>
-          <li><b>Supplier</b> adds product information</li>
-          <li><b>Admin</b> reviews the listing</li>
-          <li><b>Buyer</b> searches and compares details</li>
-          <li><b>Buyer</b> orders and simulates payment</li>
-          <li><b>Supplier</b> processes and ships the order</li>
+          <li data-i18n="hero.step1">Продавец добавляет товар</li><li data-i18n="hero.step2">Администратор проверяет карточку</li><li data-i18n="hero.step3">Покупатель сравнивает предложения</li><li data-i18n="hero.step4">Покупатель оформляет демо-заказ</li><li data-i18n="hero.step5">Продавец обновляет этап заказа</li>
         </ol>
       </div>
     </section>
 
     <section id="catalog" class="section">
       <div class="section-head">
-        <div><p class="eyebrow">CATALOGUE</p><h2>Approved products</h2></div>
+        <div><p class="eyebrow" data-i18n="catalog.eyebrow">КАТАЛОГ</p><h2 data-i18n="catalog.title">Товары и техника</h2></div>
         <p id="catalogMeta" class="muted"></p>
       </div>
       <div class="filter-panel"><div class="filters">
-        <input id="searchInput" type="search" placeholder="Mouse under 10 thousand / мышь до 10 тысяч" maxlength="300" aria-label="Smart product search">
-        <select id="categorySelect"><option value="">All categories</option></select>
-        <label>Min price, KZT<input id="minPrice" type="number" min="0" step="0.01" placeholder="0"></label><label>Max price, KZT<input id="maxPrice" type="number" min="0" step="0.01" placeholder="Any"></label><button id="clearFilters" class="ghost">Reset</button>
-        <button id="searchBtn" class="btn">Search</button>
+        <input id="searchInput" type="search" data-i18n-placeholder="catalog.search" placeholder="Например: мышь до 10 000 ₸" maxlength="300" aria-label="Поиск товаров">
+        <select id="categorySelect"><option value="" data-i18n="catalog.all">Все категории</option></select>
+        <label><span data-i18n="catalog.min">Цена от, ₸</span><input id="minPrice" type="number" min="0" step="0.01" placeholder="0"></label><label><span data-i18n="catalog.max">Цена до, ₸</span><input id="maxPrice" type="number" min="0" step="0.01" placeholder="Любая"></label><button id="clearFilters" class="ghost" data-i18n="catalog.reset">Сбросить</button>
+        <button id="searchBtn" class="btn" data-i18n="catalog.searchBtn">Найти</button>
       </div>
-      <div class="voice-controls"><label for="voiceLanguage">Voice language</label><select id="voiceLanguage"><option value="ru-RU">Русский</option><option value="en-US">English</option><option value="kk-KZ">Қазақша (browser dependent)</option></select><button type="button" id="voiceBtn" class="ghost" aria-pressed="false" aria-describedby="voiceStatus">Voice input</button></div>
-      <p id="voiceStatus" class="voice-status" role="status" aria-live="polite">Checking voice recognition support…</p>
-      <p id="searchHint" class="muted" role="status" aria-live="polite">Try “mouse under 10 thousand” or “мышь до 10 тысяч”.</p></div>
-      <div class="catalog-toolbar"><p id="resultSummary" class="muted">Browse our collection</p><span class="catalog-hint">Curated accessories · Demo catalogue</span></div>
+      <div class="voice-controls"><label for="voiceLanguage" data-i18n="catalog.voiceLang">Язык голосового поиска</label><select id="voiceLanguage"><option value="ru-RU">Русский</option><option value="en-US">English</option><option value="kk-KZ">Қазақша</option></select><button type="button" id="voiceBtn" class="ghost" aria-pressed="false" aria-describedby="voiceStatus" data-i18n="catalog.voice">Голосовой поиск</button></div>
+      <p id="voiceStatus" class="voice-status" role="status" aria-live="polite" data-i18n="catalog.voiceCheck">Проверяем поддержку голосового поиска…</p>
+      <p id="searchHint" class="muted" role="status" aria-live="polite" data-i18n="catalog.hint">Ищите по модели, бренду, характеристикам или бюджету.</p></div>
+      <div class="catalog-toolbar"><p id="resultSummary" class="muted" data-i18n="catalog.browse">Выберите товар из каталога</p><div class="catalog-tools"><span class="catalog-hint" data-i18n="catalog.curated">Популярная техника · демонстрационные цены</span><label class="sort-label"><span data-i18n="catalog.sort">Сортировка</span><select id="sortSelect"><option value="recommended" data-i18n="catalog.recommended">Рекомендуемые</option><option value="price-asc" data-i18n="catalog.priceUp">Сначала дешевле</option><option value="price-desc" data-i18n="catalog.priceDown">Сначала дороже</option><option value="stock" data-i18n="catalog.stockSort">Сначала в наличии</option></select></label></div></div><p class="catalog-demo-notice" data-i18n="catalog.demoNotice">Демо-каталог: цены и остатки приведены для учебного проекта и не являются актуальными предложениями магазинов.</p>
       <div id="productGrid" class="product-grid" aria-live="polite"></div>
-      <div class="load-more-wrap"><button type="button" id="loadMoreBtn" class="ghost hidden">Show more products <span aria-hidden="true">↓</span></button></div>
+      <div id="compareBar" class="compare-bar hidden"><span id="compareSummary"></span><div><button id="compareOpen" class="btn small" type="button" data-i18n="catalog.compare">Сравнить</button><button id="compareClear" class="ghost" type="button" data-i18n="catalog.clear">Очистить</button></div></div>
+      <div class="load-more-wrap"><button type="button" id="loadMoreBtn" class="ghost hidden" data-i18n="catalog.more">Показать ещё <span aria-hidden="true">↓</span></button></div>
     </section>
 
     <section id="how" class="section soft">
-      <div class="section-head"><div><p class="eyebrow">WHY THIS MVP</p><h2>One workflow for three roles</h2></div></div>
+      <div class="section-head"><div><p class="eyebrow" data-i18n="how.eyebrow">ПОЧЕМУ ЭТО УДОБНО</p><h2 data-i18n="how.title">Три роли — один понятный процесс</h2></div></div>
       <div class="steps">
-        <article><span>01</span><h3>Buyer</h3><p>Register, search, inspect supplier information, add products to cart, create an order and track its status.</p></article>
-        <article><span>02</span><h3>Supplier</h3><p>Add products, wait for admin approval, view related orders and move paid orders through processing and delivery.</p></article>
-        <article><span>03</span><h3>Administrator</h3><p>Review pending products, approve catalogue listings and inspect system users and project statistics.</p></article>
+        <article><span>01</span><h3 data-i18n="how.buyer">Покупатель</h3><p data-i18n="how.buyerText">Ищет товары, сравнивает характеристики, сохраняет избранное и отслеживает заказ.</p></article>
+        <article><span>02</span><h3 data-i18n="how.supplier">Продавец</h3><p data-i18n="how.supplierText">Добавляет товары, проверяет заявки и обновляет этапы заказа.</p></article>
+        <article><span>03</span><h3 data-i18n="how.admin">Администратор</h3><p data-i18n="how.adminText">Подтверждает карточки товаров, следит за каталогом и пользователями.</p></article>
       </div>
     </section>
 
@@ -83,27 +82,27 @@
     </section>
   </main>
 
-  <footer><div><b>Come and Find</b><p>Computer and office accessories • Course demonstration</p></div><p>Demo payments only. No real charges or deliveries.</p></footer>
+  <footer><div><b>Come and Find</b><p data-i18n="footer.title">Компьютерная техника и аксессуары</p></div><p data-i18n="footer.demo">Демо-оплата. Реальные списания и доставка не выполняются.</p></footer>
 
   <dialog id="authDialog">
     <form method="dialog" class="modal-card" onsubmit="return false">
       <button class="modal-close" id="authClose" aria-label="Close">×</button>
-      <div class="tabs"><button type="button" id="loginTab" class="tab active">Sign in</button><button type="button" id="registerTab" class="tab">Register</button></div>
+      <div class="tabs"><button type="button" id="loginTab" class="tab active" data-i18n="auth.login">Войти</button><button type="button" id="registerTab" class="tab" data-i18n="auth.register">Регистрация</button></div>
       <div id="loginPane">
-        <h3>Welcome back</h3>
-        <label>Email<input id="loginEmail" type="email" autocomplete="username" placeholder="you@example.com" required></label>
-        <label>Password<input id="loginPassword" type="password" autocomplete="current-password" placeholder="Your password" required></label>
-        <button id="loginSubmit" class="btn full">Sign in</button>
-        <div class="demo-login"><p class="hint">Quick demo access — choose a role:</p><div class="demo-actions"><button type="button" class="demo-role" data-demo-role="buyer">Buyer</button><button type="button" class="demo-role" data-demo-role="supplier">Supplier</button><button type="button" class="demo-role" data-demo-role="admin">Admin</button></div><p class="hint">Demo accounts are for local coursework only.</p></div>
+        <h3 data-i18n="auth.welcome">С возвращением</h3>
+        <label><span data-i18n="auth.email">Электронная почта</span><input id="loginEmail" type="email" autocomplete="username" placeholder="you@example.com" required></label>
+        <label><span data-i18n="auth.password">Пароль</span><input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••" required></label>
+        <button id="loginSubmit" class="btn full" data-i18n="auth.signin">Войти</button>
+        <div class="demo-login"><p class="hint" data-i18n="auth.quick">Демо-вход — выберите роль:</p><div class="demo-actions"><button type="button" class="demo-role" data-demo-role="buyer" data-i18n="auth.buyer">Покупатель</button><button type="button" class="demo-role" data-demo-role="supplier" data-i18n="auth.supplier">Продавец</button><button type="button" class="demo-role" data-demo-role="admin" data-i18n="auth.admin">Администратор</button></div><p class="hint" data-i18n="auth.demoNote">Учебные аккаунты для демонстрации проекта.</p></div>
       </div>
       <div id="registerPane" class="hidden">
-        <h3>Create account</h3>
-        <label>Name<input id="regName" placeholder="Your name" autocomplete="name" required maxlength="120"></label>
-        <label>Email<input id="regEmail" type="email" placeholder="name@example.kz" autocomplete="email" required></label>
-        <label>Password<input id="regPassword" type="password" placeholder="At least 8 characters" autocomplete="new-password" minlength="8" required></label>
-        <label>Role<select id="regRole"><option value="buyer">Buyer</option><option value="supplier">Supplier</option></select></label>
-        <label id="companyLabel" class="hidden">Company<input id="regCompany" placeholder="Company name"></label>
-        <button id="registerSubmit" class="btn full">Create account</button>
+        <h3 data-i18n="auth.create">Создать аккаунт</h3>
+        <label><span data-i18n="auth.name">Имя</span><input id="regName" placeholder="Ваше имя" autocomplete="name" required maxlength="120"></label>
+        <label><span data-i18n="auth.email">Электронная почта</span><input id="regEmail" type="email" placeholder="name@example.kz" autocomplete="email" required></label>
+        <label><span data-i18n="auth.password">Пароль</span><input id="regPassword" type="password" placeholder="Не менее 8 символов" autocomplete="new-password" minlength="8" required></label>
+        <label><span data-i18n="auth.role">Роль</span><select id="regRole"><option value="buyer" data-i18n="auth.buyer">Покупатель</option><option value="supplier" data-i18n="auth.supplier">Продавец</option></select></label>
+        <label id="companyLabel" class="hidden"><span data-i18n="auth.company">Компания</span><input id="regCompany" placeholder="Название компании"></label>
+        <button id="registerSubmit" class="btn full" data-i18n="auth.createButton">Зарегистрироваться</button>
       </div>
       <p id="authMessage" class="message" role="alert" aria-live="polite"></p>
     </form>
@@ -119,13 +118,18 @@
   <dialog id="cartDialog">
     <div class="modal-card wide">
       <button class="modal-close" id="cartClose" aria-label="Close">×</button>
-      <h3>Your cart</h3><p class="muted">One supplier per cart. Complete or clear the cart before switching suppliers.</p>
+      <h3 data-i18n="cart.title">Ваша корзина</h3><p class="muted" data-i18n="cart.note">В корзине могут быть товары только одного продавца.</p>
       <div id="cartContent"></div>
     </div>
   </dialog>
 
+  <dialog id="compareDialog">
+    <div class="modal-card wide"><button class="modal-close" id="compareClose" aria-label="Close">×</button><h3 id="compareTitle" data-i18n="cart.compareTitle">Сравнение товаров</h3><div id="compareContent"></div></div>
+  </dialog>
+
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-  <script src="/app.js?v=3"></script>
+  <script src="/i18n.js?v=1"></script>
+  <script src="/app.js?v=4"></script>
   <script src="/voice.js?v=3"></script>
 </body>
 </html>
