@@ -14,6 +14,7 @@ w.localStorage.setItem('cf-language','en');
 w.eval(fs.readFileSync(root+'/web/i18n.js','utf8'));
 w.eval(fs.readFileSync(root+'/web/app.js','utf8'));
 w.eval(fs.readFileSync(root+'/web/voice.js','utf8'));
+w.eval(fs.readFileSync(root+'/web/bundle.js','utf8'));
 const wait=async pred=>{for(let i=0;i<200;i++){if(pred())return;await new Promise(r=>setTimeout(r,25))}throw Error('UI timeout')};
 let count=0;function ok(v,label){if(!v)throw Error(label);console.log('PASS UI '+label);count++}
 await wait(()=>w.document.querySelectorAll('.product-card').length===9);ok(true,'catalogue renders');
@@ -22,6 +23,11 @@ for (const lang of ['kk','ru','en']) {
   ok(w.document.documentElement.lang===lang,'language '+lang);
 }
 await w.loadProducts();
+await w.document.querySelector('#kitForm').onsubmit({preventDefault(){}});
+ok(w.document.querySelector('#kitResults button')!==null,'study bundle within 100000 KZT');
+w.document.querySelector('#kitBudget').value=1;
+await w.document.querySelector('#kitForm').onsubmit({preventDefault(){}});
+ok(w.document.querySelector('#kitResults').textContent.includes('Lowest complete bundle price'),'budget shortfall shown');
 w.toggleFavorite(1);
 ok(w.document.querySelector('#favoriteCount').textContent==='1','save favourite');
 w.toggleCompare(1);w.toggleCompare(2);await w.openCompare();

@@ -81,6 +81,7 @@ func main() {
 	mux.HandleFunc("/api/products", app.products)
 	mux.HandleFunc("/api/search/interpret", app.interpretSearch)
 	mux.HandleFunc("/api/products/", app.productByID)
+	mux.Handle("/api/cart/bundle", app.withUser(app.requireRole("buyer", http.HandlerFunc(app.addBundle))))
 	mux.Handle("/api/cart", app.withUser(http.HandlerFunc(app.cart)))
 	mux.Handle("/api/cart/", app.withUser(http.HandlerFunc(app.cartItem)))
 	mux.Handle("/api/orders", app.withUser(http.HandlerFunc(app.orders)))

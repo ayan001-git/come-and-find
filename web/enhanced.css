@@ -134,3 +134,10 @@ dialog { border-radius: 22px; max-height: 92vh; }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
 
 .seller-offers>div {display:grid;grid-template-columns:1fr auto;gap:.45rem 1rem;align-items:center;border-top:1px solid var(--line);padding:.85rem 0}.seller-offers small {color:var(--muted)}
+
+#kitForm,#kitResults {display:flex;gap:1rem;flex-wrap:wrap;align-items:end}
+#kitCategories {border:1px solid var(--line);border-radius:.8rem;display:flex;gap:.8rem;flex-wrap:wrap;padding:.7rem}
+#kitCategories label {display:flex;align-items:center;gap:.3rem;margin:0}
+#kitCategories input {min-height:0;width:auto;margin:0}
+#kitResults {margin-top:1rem;align-items:stretch}
+#kitResults article {flex:1 1 17rem}

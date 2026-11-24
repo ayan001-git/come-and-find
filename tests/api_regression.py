@@ -111,4 +111,12 @@ selected=offers[-1]
 st,_=call(buyer,'/api/cart',{'product_id':selected['id'],'quantity':1})
 item=call(buyer,'/api/cart')[1]['items'][0]
 check('Selected seller offer in cart',st==200 and item['id']==selected['id'] and item['price_kzt']==selected['price_kzt'])
+call(buyer,f"/api/cart/{selected['id']}",method='DELETE')
+first=products[0]
+second=next(p for p in products if p['supplier_id']==first['supplier_id'] and p['category']!=first['category'])
+bundle={'ids':[first['id'],second['id']],'total_tiyn':round((first['price_kzt']+second['price_kzt'])*100)}
+check('Reject changed bundle quote',call(buyer,'/api/cart/bundle',{**bundle,'total_tiyn':0},'POST')[0]==409)
+check('Failed bundle leaves cart empty',call(buyer,'/api/cart')[1]['items']==[])
+check('Add workspace bundle',call(buyer,'/api/cart/bundle',bundle,'POST')[0]==200)
+check('Both workspace items present',{p['id'] for p in call(buyer,'/api/cart')[1]['items']}==set(bundle['ids']))
 print(f'RESULT: {sum(ok for _,ok in results)}/{len(results)} passed');raise SystemExit(0 if all(ok for _,ok in results) else 1)
