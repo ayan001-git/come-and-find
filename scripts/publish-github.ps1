@@ -13,9 +13,11 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 if (Test-Path $target) {
     throw "Upload folder already exists: $target. Rename it first, or use that repo to resume."
 }
-Write-Host "Cloning review branch: $branch"
-git clone --branch $branch $remote $target
+Write-Host "Cloning main and creating review branch: $branch"
+git clone --branch main $remote $target
 if ($LASTEXITCODE -ne 0) { throw 'Clone failed. Check GitHub authentication and connection.' }
+git -C $target checkout -b $branch
+if ($LASTEXITCODE -ne 0) { throw 'Could not create the review branch.' }
 
 $files = Get-ChildItem -LiteralPath $source -Recurse -Force -File
 foreach ($file in $files) {

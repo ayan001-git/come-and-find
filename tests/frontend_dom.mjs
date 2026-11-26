@@ -1,72 +1,270 @@
-import {JSDOM} from 'jsdom';
-import fs from 'node:fs';
-import {fileURLToPath} from 'node:url';
-const root=fileURLToPath(new URL('../',import.meta.url));
-const dom=new JSDOM(fs.readFileSync(root+'/web/index.html','utf8'),{url:'http://127.0.0.1:8080',runScripts:'outside-only',pretendToBeVisual:true});
-const w=dom.window;let cookie='';const errors=[];w.console.error=(...a)=>errors.push(a.join(' '));
-w.HTMLElement.prototype.scrollIntoView=function(){};
-w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};
-w.fetch=async(url,options={})=>{const headers={...options.headers};if(cookie)headers.Cookie=cookie;const r=await fetch(new URL(url,w.location.href),{...options,headers});const c=r.headers.get('set-cookie');if(c)cookie=c.split(';')[0];return r};
-Object.defineProperty(w,'isSecureContext',{value:true,configurable:true});
+import { JSDOM } from "jsdom";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+const root = fileURLToPath(new URL("../", import.meta.url));
+const dom = new JSDOM(fs.readFileSync(root + "/web/index.html", "utf8"), {
+  url: "http://127.0.0.1:8080",
+  runScripts: "outside-only",
+  pretendToBeVisual: true,
+});
+const w = dom.window;
+let cookie = "";
+const errors = [];
+w.console.error = (...a) => errors.push(a.join(" "));
+w.HTMLElement.prototype.scrollIntoView = function () {};
+w.HTMLDialogElement.prototype.showModal = function () {
+  this.open = true;
+};
+w.HTMLDialogElement.prototype.close = function () {
+  this.open = false;
+};
+w.fetch = async (url, options = {}) => {
+  const headers = { ...options.headers };
+  if (cookie) headers.Cookie = cookie;
+  const r = await fetch(new URL(url, w.location.href), { ...options, headers });
+  const c = r.headers.get("set-cookie");
+  if (c) cookie = c.split(";")[0];
+  return r;
+};
+Object.defineProperty(w, "isSecureContext", {
+  value: true,
+  configurable: true,
+});
 let speech;
-w.SpeechRecognition=class{constructor(){speech=this}start(){this.onstart?.()}stop(){this.onend?.()}abort(){this.onend?.()}};
-w.localStorage.setItem('cf-language','en');
-w.eval(fs.readFileSync(root+'/web/i18n.js','utf8'));
-w.eval(['app.js','bundle.js'].map(file=>fs.readFileSync(root+'/web/'+file,'utf8')).join('\n'));
-w.eval(fs.readFileSync(root+'/web/voice.js','utf8'));
-const wait=async pred=>{for(let i=0;i<200;i++){if(pred())return;await new Promise(r=>setTimeout(r,25))}throw Error('UI timeout')};
-let count=0;function ok(v,label){if(!v)throw Error(label);console.log('PASS UI '+label);count++}
-await wait(()=>w.document.querySelectorAll('.product-card').length===9);ok(true,'catalogue renders');
-for (const lang of ['kk','ru','en']) {
+w.SpeechRecognition = class {
+  constructor() {
+    speech = this;
+  }
+  start() {
+    this.onstart?.();
+  }
+  stop() {
+    this.onend?.();
+  }
+  abort() {
+    this.onend?.();
+  }
+};
+w.localStorage.setItem("cf-language", "en");
+w.localStorage.setItem("cf-theme", "dark");
+w.eval(fs.readFileSync(root + "/web/i18n.js", "utf8"));
+w.eval(fs.readFileSync(root + "/web/theme.js", "utf8"));
+w.eval(
+  ["app.js", "bundle.js"]
+    .map((file) => fs.readFileSync(root + "/web/" + file, "utf8"))
+    .join("\n"),
+);
+w.eval(fs.readFileSync(root + "/web/voice.js", "utf8"));
+const wait = async (pred) => {
+  for (let i = 0; i < 200; i++) {
+    if (pred()) return;
+    await new Promise((r) => setTimeout(r, 25));
+  }
+  throw Error("UI timeout");
+};
+let count = 0;
+function ok(v, label) {
+  if (!v) throw Error(label);
+  console.log("PASS UI " + label);
+  count++;
+}
+await wait(() => w.document.querySelectorAll(".product-card").length === 9);
+ok(true, "catalogue renders");
+ok(w.document.documentElement.dataset.theme === "dark", "restore saved dark theme");
+ok(
+  w.document.querySelector("#themeToggle").getAttribute("aria-pressed") === "true",
+  "dark theme toggle state",
+);
+w.document.querySelector("#themeToggle").click();
+ok(
+  w.document.documentElement.dataset.theme === "light" &&
+    w.localStorage.getItem("cf-theme") === "light",
+  "toggle and persist light theme",
+);
+w.document.querySelector("#themeToggle").click();
+ok(
+  w.document.documentElement.dataset.theme === "dark" &&
+    w.localStorage.getItem("cf-theme") === "dark",
+  "toggle and persist dark theme",
+);
+for (const lang of ["kk", "ru", "en"]) {
   w.setCfLanguage(lang);
-  ok(w.document.documentElement.lang===lang,'language '+lang);
+  ok(w.document.documentElement.lang === lang, "language " + lang);
 }
 await w.loadProducts();
-await w.document.querySelector('#kitForm').onsubmit({preventDefault(){}});
-ok(w.document.querySelector('#kitResults button')!==null,'study bundle within 100000 KZT');
-w.document.querySelector('#kitBudget').value=1;
-await w.document.querySelector('#kitForm').onsubmit({preventDefault(){}});
-ok(w.document.querySelector('#kitResults').textContent.includes('Lowest complete bundle price'),'budget shortfall shown');
+await w.document.querySelector("#kitForm").onsubmit({ preventDefault() {} });
+ok(
+  w.document.querySelector("#kitResults button") !== null,
+  "study bundle within 100000 KZT",
+);
+w.document.querySelector("#kitBudget").value = 1;
+await w.document.querySelector("#kitForm").onsubmit({ preventDefault() {} });
+ok(
+  w.document
+    .querySelector("#kitResults")
+    .textContent.includes("Lowest complete bundle price"),
+  "budget shortfall shown",
+);
 w.toggleFavorite(1);
-ok(w.document.querySelector('#favoriteCount').textContent==='1','save favourite');
-w.toggleCompare(1);w.toggleCompare(2);await w.openCompare();
-ok(w.document.querySelectorAll('.compare-table td').length>=10,'compare two products');
-w.document.querySelector('#compareDialog').close();
-w.document.querySelector('#voiceBtn').click();ok(w.document.querySelector('#voiceBtn').getAttribute('aria-pressed')==='true','voice starts only after click');
-w.document.querySelector('#voiceLanguage').value='ru-RU';ok(['en-US','ru-RU'].includes(speech.lang),'voice language selected');
-speech.onresult({results:[[{transcript:'беспроводная мышь до 10 тысяч'}]]});speech.onend();
-ok(w.document.querySelector('#searchInput').value==='беспроводная мышь до 10 тысяч','transcript is editable text');
-ok(w.document.querySelector('#voiceBtn').getAttribute('aria-pressed')==='false','voice finishes cleanly');
-await wait(()=>!w.document.querySelector('#searchBtn').disabled);await w.document.querySelector('#searchBtn').onclick();ok(w.document.querySelector('#searchHint').textContent.includes('Mice'),'smart interpretation rendered');
-ok(w.document.querySelectorAll('.product-card').length>0,'voice query can search');
-w.document.querySelector('#voiceBtn').click();speech.onerror({error:'not-allowed'});ok(w.document.querySelector('#voiceStatus').textContent.includes('denied'),'microphone denial fallback');
-w.document.querySelector('#voiceBtn').click();speech.onerror({error:'no-speech'});ok(w.document.querySelector('#voiceStatus').textContent.includes('No speech'),'no speech fallback');
-await w.document.querySelector('#clearFilters').onclick();
-await w.document.querySelector('#authBtn').onclick();
-w.document.querySelector('[data-demo-role="buyer"]').click();await w.document.querySelector('#loginSubmit').onclick();ok(w.document.querySelector('#authDialog').open===false,'login closes dialog');
-const offerModel=(await (await w.fetch('/api/products')).json()).find(p=>p.name==='Logitech M185');
+ok(
+  w.document.querySelector("#favoriteCount").textContent === "1",
+  "save favourite",
+);
+w.toggleCompare(1);
+w.toggleCompare(2);
+await w.openCompare();
+ok(
+  w.document.querySelectorAll(".compare-table td").length >= 10,
+  "compare two products",
+);
+w.document.querySelector("#compareDialog").close();
+w.document.querySelector("#voiceBtn").click();
+ok(
+  w.document.querySelector("#voiceBtn").getAttribute("aria-pressed") === "true",
+  "voice starts only after click",
+);
+w.document.querySelector("#voiceLanguage").value = "ru-RU";
+ok(["en-US", "ru-RU"].includes(speech.lang), "voice language selected");
+speech.onresult({
+  results: [[{ transcript: "беспроводная мышь до 10 тысяч" }]],
+});
+speech.onend();
+ok(
+  w.document.querySelector("#searchInput").value ===
+    "беспроводная мышь до 10 тысяч",
+  "transcript is editable text",
+);
+ok(
+  w.document.querySelector("#voiceBtn").getAttribute("aria-pressed") ===
+    "false",
+  "voice finishes cleanly",
+);
+await wait(() => !w.document.querySelector("#searchBtn").disabled);
+await w.document.querySelector("#searchBtn").onclick();
+ok(
+  w.document.querySelector("#searchHint").textContent.includes("Mice"),
+  "smart interpretation rendered",
+);
+ok(
+  w.document.querySelectorAll(".product-card").length > 0,
+  "voice query can search",
+);
+w.document.querySelector("#voiceBtn").click();
+speech.onerror({ error: "not-allowed" });
+ok(
+  w.document.querySelector("#voiceStatus").textContent.includes("denied"),
+  "microphone denial fallback",
+);
+w.document.querySelector("#voiceBtn").click();
+speech.onerror({ error: "no-speech" });
+ok(
+  w.document.querySelector("#voiceStatus").textContent.includes("No speech"),
+  "no speech fallback",
+);
+await w.document.querySelector("#clearFilters").onclick();
+await w.document.querySelector("#authBtn").onclick();
+w.document.querySelector('[data-demo-role="buyer"]').click();
+await w.document.querySelector("#loginSubmit").onclick();
+ok(
+  w.document.querySelector("#authDialog").open === false,
+  "login closes dialog",
+);
+const offerModel = (await (await w.fetch("/api/products")).json()).find(
+  (p) => p.name === "Logitech M185",
+);
 await w.viewProduct(offerModel.id);
-const choices=w.document.querySelectorAll('#productDetail [data-offer]');
-ok(choices.length===3,'model lists three seller offers');
-const chosen=Number(choices[1].dataset.offer);
-w.eval(choices[1].getAttribute('onclick'));
-await wait(()=>w.document.querySelector('#cartCount').textContent==='1');
-const selectedCart=await (await w.fetch('/api/cart')).json();
-ok(selectedCart.items[0].id===chosen,'chosen offer reaches the buyer cart');
-w.document.querySelector('#productDialog').close();
-await wait(()=>!w.document.querySelector('#cartBtn').disabled);
+const choices = w.document.querySelectorAll("#productDetail [data-offer]");
+ok(choices.length === 3, "model lists three seller offers");
+const chosen = Number(choices[1].dataset.offer);
+w.eval(choices[1].getAttribute("onclick"));
+await wait(() => w.document.querySelector("#cartCount").textContent === "1");
+const selectedCart = await (await w.fetch("/api/cart")).json();
+ok(selectedCart.items[0].id === chosen, "chosen offer reaches the buyer cart");
+w.document.querySelector("#productDialog").close();
+await wait(() => !w.document.querySelector("#cartBtn").disabled);
 await w.removeCart(chosen);
-w.document.querySelector('#cartDialog').close();
-await w.addToCart(1);await w.addToCart(1);ok(w.document.querySelector('#cartCount').textContent==='2','repeat add count');
-await w.document.querySelector('#cartBtn').onclick();ok(w.document.querySelector('#cartDialog').open,'cart opens');
-ok(w.document.querySelector('.quantity')!==null,'quantity controls render');
-await w.setQuantity(1,1);ok(w.document.querySelector('#cartContent').textContent.includes('Qty: 1'),'quantity update');
-await w.createOrder();ok(!w.document.querySelector('#cartDialog').open,'checkout closes cart');ok(w.document.querySelector('#dashboard').classList.contains('hidden'),'dashboard stays closed after checkout');await w.document.querySelector('#dashboardBtn').onclick();ok(w.document.querySelector('#dashboardContent').textContent.includes('Demo payment'),'buyer order renders');
-await w.payOrder(1);ok(w.document.querySelector('#dashboardContent').textContent.includes('Demo payment'),'payment rendered');
-await w.document.querySelector('#logoutBtn').onclick();ok(w.document.querySelector('#cartCount').textContent==='0','logout resets count');ok(w.document.querySelector('#whoami').textContent==='','logout resets identity');
-await w.document.querySelector('#authBtn').onclick();w.document.querySelector('#loginEmail').value='admin@comeandfind.kz';w.document.querySelector('#loginPassword').value='Admin123!';await w.document.querySelector('#loginSubmit').onclick();await w.document.querySelector('#dashboardBtn').onclick();ok(w.document.querySelector('#dashboardContent').textContent.includes('Deactivate'),'admin controls render');
-await w.moderateProduct(1,'withdraw');ok(![...w.document.querySelectorAll('.product-card h3')].some(e=>e.textContent==='Office Keyboard K120'),'withdraw refreshes catalogue');
-w.document.querySelector('#minPrice').value='20000';await w.document.querySelector('#searchBtn').onclick();ok(w.document.querySelectorAll('.product-card').length>0,'price filters render');
-const fallback=new JSDOM(fs.readFileSync(root+'/web/index.html','utf8'),{url:'http://localhost',runScripts:'outside-only'});
-fallback.window.cfLang='en';fallback.window.eval(fs.readFileSync(root+'/web/voice.js','utf8'));fallback.window.document.querySelector('#voiceBtn').click();ok(fallback.window.document.querySelector('#voiceStatus').textContent.includes('localhost'),'unsupported browser keeps text fallback');fallback.window.close();
-ok(errors.length===0,'no logged JavaScript errors');console.log('UI RESULT '+count+' passed');w.close();
+w.document.querySelector("#cartDialog").close();
+await w.addToCart(1);
+await w.addToCart(1);
+ok(
+  w.document.querySelector("#cartCount").textContent === "2",
+  "repeat add count",
+);
+await w.document.querySelector("#cartBtn").onclick();
+ok(w.document.querySelector("#cartDialog").open, "cart opens");
+ok(w.document.querySelector(".quantity") !== null, "quantity controls render");
+await w.setQuantity(1, 1);
+ok(
+  w.document.querySelector("#cartContent").textContent.includes("Qty: 1"),
+  "quantity update",
+);
+await w.createOrder();
+ok(!w.document.querySelector("#cartDialog").open, "checkout closes cart");
+ok(
+  w.document.querySelector("#dashboard").classList.contains("hidden"),
+  "dashboard stays closed after checkout",
+);
+await w.document.querySelector("#dashboardBtn").onclick();
+ok(
+  w.document
+    .querySelector("#dashboardContent")
+    .textContent.includes("Demo payment"),
+  "buyer order renders",
+);
+await w.payOrder(1);
+ok(
+  w.document
+    .querySelector("#dashboardContent")
+    .textContent.includes("Demo payment"),
+  "payment rendered",
+);
+await w.document.querySelector("#logoutBtn").onclick();
+ok(
+  w.document.querySelector("#cartCount").textContent === "0",
+  "logout resets count",
+);
+ok(
+  w.document.querySelector("#whoami").textContent === "",
+  "logout resets identity",
+);
+await w.document.querySelector("#authBtn").onclick();
+w.document.querySelector("#loginEmail").value = "admin@comeandfind.kz";
+w.document.querySelector("#loginPassword").value = "Admin123!";
+await w.document.querySelector("#loginSubmit").onclick();
+await w.document.querySelector("#dashboardBtn").onclick();
+ok(
+  w.document
+    .querySelector("#dashboardContent")
+    .textContent.includes("Deactivate"),
+  "admin controls render",
+);
+await w.moderateProduct(1, "withdraw");
+ok(
+  ![...w.document.querySelectorAll(".product-card h3")].some(
+    (e) => e.textContent === "Office Keyboard K120",
+  ),
+  "withdraw refreshes catalogue",
+);
+w.document.querySelector("#minPrice").value = "20000";
+await w.document.querySelector("#searchBtn").onclick();
+ok(
+  w.document.querySelectorAll(".product-card").length > 0,
+  "price filters render",
+);
+const fallback = new JSDOM(fs.readFileSync(root + "/web/index.html", "utf8"), {
+  url: "http://localhost",
+  runScripts: "outside-only",
+});
+fallback.window.cfLang = "en";
+fallback.window.eval(fs.readFileSync(root + "/web/voice.js", "utf8"));
+fallback.window.document.querySelector("#voiceBtn").click();
+ok(
+  fallback.window.document
+    .querySelector("#voiceStatus")
+    .textContent.includes("localhost"),
+  "unsupported browser keeps text fallback",
+);
+fallback.window.close();
+ok(errors.length === 0, "no logged JavaScript errors");
+console.log("UI RESULT " + count + " passed");
+w.close();

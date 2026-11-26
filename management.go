@@ -128,8 +128,8 @@ func (a *App) seedExtras() error {
 
 	legacyPhotos := map[string]string{
 		"Office Keyboard K120": "https://www.jbhifi.com.au/cdn/shop/products/394698-Product-0-I_92f5e9a0-1bff-47f3-a08d-5b92c3fdbbe4_1024x1024.png",
-		"Silent Mouse M220": "https://biuropaczka.pl/media/catalog/product/6/f/6f65b020-9501-499d-be0a-6230a07e9210.jpg",
-		"Full HD Webcam C270": "https://mercury.vtexassets.com/arquivos/ids/21723812/-SERT206012101.jpg?v=638937214185100000",
+		"Silent Mouse M220": "https://resource.logitech.com/content/dam/logitech/en/products/mice/m220/m220-rose-charcoal-intro.jpg",
+		"Full HD Webcam C270": "https://resource.logitech.com/content/dam/logitech/en/products/webcams/c270/migration-assets-for-delorean-2025/c270-hd-webcam.png",
 		"Portable SSD 500 GB": "https://thumb.pccomponentes.com/w-530-530/articles/75/754958/1160-hp-p500-ssd-externo-500gb-usb-c-31-negro.jpg",
 		"24-inch IPS Monitor": "https://neom.kz/upload/iblock/e53/rjpdatre81gfknm3y2y12fafqtlfhn99.jpg",
 		"Compact Keyboard": "https://resource.logitech.com/e_trim/w_700%2Ch_600%2Cc_pad%2Cq_auto%2Cf_auto%2Cdpr_1.0/b_white/content/dam/logitech/en/products/keyboards/pebble-keys-2-k380s/gallery/pebble-keys-2-k380s-top-tonal-graphite-gallery-us.png",
@@ -143,6 +143,17 @@ func (a *App) seedExtras() error {
 	for name, imageURL := range legacyPhotos {
 		if _, err = tx.Exec(`UPDATE products SET image_url=$1 WHERE name=$2 AND image_url LIKE '/assets/%'`, imageURL, name); err != nil { return err }
 	}
+	photoFixes := map[string]string{
+		"Silent Mouse M220": "https://resource.logitech.com/content/dam/logitech/en/products/mice/m220/m220-rose-charcoal-intro.jpg",
+		"Full HD Webcam C270": "https://resource.logitech.com/content/dam/logitech/en/products/webcams/c270/migration-assets-for-delorean-2025/c270-hd-webcam.png",
+		"Kingston XS1000 Portable SSD 1 TB": "https://oechsle.vteximg.com.br/arquivos/ids/24833638-1000-1000/Image-1.jpg?v=639111037753370000",
+		"WD Blue SN580 NVMe SSD 1 TB": "https://c1.neweggimages.com/ProductImage/20-250-254-01.jpg",
+		"Xiaomi Monitor A27i 27 inch": "/assets/monitor.svg",
+		"AOC 24B2XH 23.8 inch": "https://cdn.sanity.io/images/hf5b3axp/production/e3e42cd969c6c192afca158b5f86d0b5b36d0727-3840x3840.png?w=1920&fit=max&auto=format",
+	}
+	for name, imageURL := range photoFixes {
+		if _, err = tx.Exec(`UPDATE products SET image_url=$1 WHERE name=$2`, imageURL, name); err != nil { return err }
+	}
 
 	// Values are illustrative KZT prices and stock counts for coursework, not live offers.
 	type product struct { supplier, name, category, description, specs, image string; price, stock int }
@@ -155,11 +166,11 @@ func (a *App) seedExtras() error {
 		{"officehub", "Logitech C920 HD Pro", "Webcams", "Веб-камера Full HD с двумя микрофонами для онлайн-занятий, встреч и видеозвонков.", `{"Brand":"Logitech","Resolution":"1080p at 30 fps","Microphones":"Dual stereo","Connection":"USB-A","Lens":"78° field of view"}`, "https://www.cecomsa.com/web/image/product.template/24905/image_1024?unique=3637dfc", 42990, 6},
 		{"officehub", "A4Tech PK-910H", "Webcams", "Веб-камера Full HD с автоматической коррекцией изображения для видеосвязи.", `{"Brand":"A4Tech","Resolution":"1080p","Microphone":"Built-in","Connection":"USB-A","Focus":"Fixed"}`, "https://object.pscloud.io/cms/cms/Photo/img_0_342_109_3_1.jpg", 18990, 10},
 		{"datapoint", "Samsung T7 Portable SSD 1 TB", "Storage", "Портативный SSD с интерфейсом USB 3.2 Gen 2 для резервных копий и переноса больших файлов.", `{"Brand":"Samsung","Capacity":"1 TB","Interface":"USB 3.2 Gen 2 Type-C","Read speed":"Up to 1,050 MB/s","Warranty":"12 months"}`, "https://paksell.pk/cdn/shop/products/samsung-t7-portable-ssd-1tb-usb32-gen-2-type-c-external-ssd-438520.jpg?v=1691492418&width=800", 58990, 8},
-		{"datapoint", "Kingston XS1000 Portable SSD 1 TB", "Storage", "Компактный внешний SSD для учёбы, проектов и резервного копирования данных.", `{"Brand":"Kingston","Capacity":"1 TB","Interface":"USB 3.2 Gen 2","Read speed":"Up to 1,050 MB/s","Warranty":"12 months"}`, "https://oechsle.vteximg.com.br/arquivos/ids/23817662-1000-1000/imageUrl_1.jpg?v=639040537531100000", 49990, 10},
-		{"datapoint", "WD Blue SN580 NVMe SSD 1 TB", "Storage", "Внутренний NVMe-накопитель формата M.2 для совместимого ноутбука или настольного компьютера.", `{"Brand":"Western Digital","Capacity":"1 TB","Interface":"PCIe Gen 4 x4 NVMe","Form factor":"M.2 2280","Warranty":"36 months"}`, "https://cdn.ballicom.co.uk/?r=peyJpbWciOiJcL1wvaW1hZ2VzXC9jZG5cL2ZkXC9jNlwvZmRjNmFhMTMtZmJkZS00ZjI4LTk4OGQtOWRmNzAwMWQ3ZTQyLmpwZyIsInNpemUiOjg1MCwiZXh0ZW5zaW9uIjoianBnIn0%3Db", 37990, 5},
+		{"datapoint", "Kingston XS1000 Portable SSD 1 TB", "Storage", "Компактный внешний SSD для учёбы, проектов и резервного копирования данных.", `{"Brand":"Kingston","Capacity":"1 TB","Interface":"USB 3.2 Gen 2","Read speed":"Up to 1,050 MB/s","Warranty":"12 months"}`, "https://oechsle.vteximg.com.br/arquivos/ids/24833638-1000-1000/Image-1.jpg?v=639111037753370000", 49990, 10},
+		{"datapoint", "WD Blue SN580 NVMe SSD 1 TB", "Storage", "Внутренний NVMe-накопитель формата M.2 для совместимого ноутбука или настольного компьютера.", `{"Brand":"Western Digital","Capacity":"1 TB","Interface":"PCIe Gen 4 x4 NVMe","Form factor":"M.2 2280","Warranty":"36 months"}`, "https://c1.neweggimages.com/ProductImage/20-250-254-01.jpg", 37990, 5},
 		{"officehub", "Samsung Essential Monitor S3 24 inch", "Monitors", "24-дюймовый IPS-монитор Full HD с тонкими рамками для работы, учёбы и дома.", `{"Brand":"Samsung","Size":"24 inch","Resolution":"1920 × 1080","Panel":"IPS, 100 Hz","Ports":"HDMI, D-Sub"}`, "https://neom.kz/upload/iblock/e53/rjpdatre81gfknm3y2y12fafqtlfhn99.jpg", 69990, 5},
-		{"officehub", "Xiaomi Monitor A27i 27 inch", "Monitors", "27-дюймовый IPS-монитор Full HD с частотой 100 Гц и тонким корпусом.", `{"Brand":"Xiaomi","Size":"27 inch","Resolution":"1920 × 1080","Panel":"IPS, 100 Hz","Ports":"HDMI, DisplayPort"}`, "https://www.proshop.dk/Images/915x900/3238265_54995d01098b.jpg", 79990, 4},
-		{"gadgethouse", "AOC 24B2XH 23.8 inch", "Monitors", "Компактный IPS-монитор Full HD с матовым экраном для офисной работы.", `{"Brand":"AOC","Size":"23.8 inch","Resolution":"1920 × 1080","Panel":"IPS, 75 Hz","Ports":"HDMI, VGA"}`, "https://desktop.bg/system/images/272049/double/aoc_24b2xheu.png", 59990, 7},
+		{"officehub", "Xiaomi Monitor A27i 27 inch", "Monitors", "27-дюймовый IPS-монитор Full HD с частотой 100 Гц и тонким корпусом.", `{"Brand":"Xiaomi","Size":"27 inch","Resolution":"1920 × 1080","Panel":"IPS, 100 Hz","Ports":"HDMI, DisplayPort"}`, "/assets/monitor.svg", 79990, 4},
+		{"gadgethouse", "AOC 24B2XH 23.8 inch", "Monitors", "Компактный IPS-монитор Full HD с матовым экраном для офисной работы.", `{"Brand":"AOC","Size":"23.8 inch","Resolution":"1920 × 1080","Panel":"IPS, 75 Hz","Ports":"HDMI, VGA"}`, "https://cdn.sanity.io/images/hf5b3axp/production/e3e42cd969c6c192afca158b5f86d0b5b36d0727-3840x3840.png?w=1920&fit=max&auto=format", 59990, 7},
 		{"gadgethouse", "HyperX Cloud Stinger 2 Core", "Headsets", "Лёгкая игровая гарнитура с поворотным микрофоном и мягкими амбушюрами.", `{"Brand":"HyperX","Connection":"3.5 mm","Microphone":"Swivel-to-mute","Audio":"Stereo","Platform":"PC and console"}`, "https://cdn.cs.1worldsync.com/syndication/mediaserverredirect/8244d46464d238a3a7d28fddcf21e025/width%283000%29.webp", 22990, 8},
 		{"gadgethouse", "JBL Quantum 100", "Headsets", "Проводная игровая гарнитура с отсоединяемым микрофоном и объёмным звуком JBL QuantumSOUND.", `{"Brand":"JBL","Connection":"3.5 mm","Microphone":"Detachable boom mic","Audio":"JBL QuantumSOUND","Cable":"1.2 m"}`, "https://www.jbl.com/on/demandware.static/-/Sites-masterCatalog_Harman/default/dw9fa4cceb/JBL_Quantum_100_Product%20Image_Hero_Black.png", 19990, 12},
 		{"datapoint", "TP-Link Archer C6 AC1200", "Networking", "Двухдиапазонный Wi‑Fi-роутер с гигабитными портами для квартиры и небольшого офиса.", `{"Brand":"TP-Link","Wi-Fi":"AC1200 dual-band","Ports":"4 × Gigabit LAN, 1 × Gigabit WAN","Antennas":"4 external","Security":"WPA/WPA2"}`, "https://www.dateks.lv/images/pic/2400/2400/475/1062.jpg", 24990, 6},
@@ -205,7 +216,7 @@ func (a *App) seedExtras() error {
 		if err = tx.QueryRow(`SELECT EXISTS(SELECT 1 FROM products WHERE supplier_id=$1 AND name=$2)`, sid, p.name).Scan(&exists); err != nil { return err }
 		if exists { continue }
 		imageURL := p.image
-		if !strings.HasPrefix(imageURL, "https://") {
+		if !strings.HasPrefix(imageURL, "https://") && !strings.HasPrefix(imageURL, "/assets/") {
 			imageURL = "/assets/" + imageURL
 		}
 		if _, err = tx.Exec(`INSERT INTO products(supplier_id,category_id,name,description,specs,price_kzt,stock,image_url,approved) VALUES($1,$2,$3,$4,$5::jsonb,$6,$7,$8,true)`, sid, categoryIDs[p.category], p.name, p.description, p.specs, strconv.Itoa(p.price), p.stock, imageURL); err != nil { return err }

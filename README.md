@@ -65,10 +65,10 @@ DB_MAX_OPEN controls the connection pool (default 10).
 ## Implemented rules
 
 - Public catalogue/details show approved products of active suppliers.
-- Russian, Kazakh, and English interface languages can be switched in the header; the selection is saved in the browser.
+- Russian, Kazakh, and English interface languages can be switched in the header; language and light/dark theme preferences are saved in the browser.
 - Open Offers on Logitech M185, Samsung T7 1 TB, or Logitech Brio 300 to compare three sellers by price and stock. The selected listing is used for cart and checkout.
 - Product sorting, a browser-saved favourites list and side-by-side comparison of up to three items.
-- Product photos are linked from manufacturer and retailer image hosts. Image source pages and fallback behavior are documented in `docs/PRODUCT_IMAGE_SOURCES.md`.
+- Most product photos are linked from manufacturer and retailer image hosts; Xiaomi A27i uses project-owned monitor artwork. Image sources and fallback behavior are documented in `docs/PRODUCT_IMAGE_SOURCES.md`.
 - Voice input with microphone error handling and editable text; browser support required.
 - Rule-based RU/EN smart queries: mouse under ten thousand / мышь до 10 тысяч.
 - Search, category, minimum and maximum price filters are combined. Explicit price fields override inferred prices.
