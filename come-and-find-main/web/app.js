@@ -1,0 +1,184 @@
+const $ = s => document.querySelector(s);
+const fmt = n => new Intl.NumberFormat(({kk:'kk-KZ',en:'en-US',ru:'ru-KZ'})[window.cfLang]||'ru-KZ', {maximumFractionDigits:0}).format(Number(n)) + ' ₸';
+let me = null, categories = [];
+let allProducts = [], visibleProductCount = 0;
+const PAGE_SIZE = 9;
+const categoryArtwork = {Keyboards:'/assets/keyboard.svg',Mice:'/assets/mouse.svg',Webcams:'/assets/webcam.svg',Storage:'/assets/ssd.svg',Monitors:'/assets/monitor.svg',Headsets:'/assets/product.svg',Networking:'/assets/product.svg',Accessories:'/assets/product.svg',Power:'/assets/product.svg'};
+let favoriteIds = JSON.parse(localStorage.getItem('cf-favorites') || '[]');
+let compareIds = JSON.parse(localStorage.getItem('cf-compare') || '[]');
+let favoritesOnly = false;
+const categoryNames = {Keyboards:{ru:'Клавиатуры',kk:'Пернетақталар',en:'Keyboards'},Mice:{ru:'Мыши',kk:'Тінтуірлер',en:'Mice'},Webcams:{ru:'Веб-камеры',kk:'Веб-камералар',en:'Webcams'},Storage:{ru:'Накопители',kk:'Жинақтауыштар',en:'Storage'},Monitors:{ru:'Мониторы',kk:'Мониторлар',en:'Monitors'},Headsets:{ru:'Гарнитуры',kk:'Құлаққаптар',en:'Headsets'},Networking:{ru:'Сетевое оборудование',kk:'Желі жабдығы',en:'Networking'},Accessories:{ru:'Аксессуары',kk:'Аксессуарлар',en:'Accessories'},Power:{ru:'Питание и ИБП',kk:'Қуат көзі және ҮҚК',en:'Power'}};
+const localizedProducts = {
+  'Office Keyboard K120':['Клавиатура Office K120','Office K120 пернетақтасы','Оқу мен кеңсеге арналған толық өлшемді USB пернетақтасы.','Проводная полноразмерная USB-клавиатура для учёбы и офиса.'],
+  'Silent Mouse M220':['Тихая мышь M220','M220 тыныш тінтуірі','Ноутбук пен кеңсеге арналған ықшам сымсыз тінтуір.','Компактная беспроводная мышь с тихими нажатиями.'],
+  'Full HD Webcam C270':['Веб-камера Full HD C270','Full HD C270 веб-камерасы','Онлайн сабақ пен қоңырауларға арналған веб-камера.','HD-веб-камера с разрешением 720p для занятий и видеозвонков.'],
+  'Portable SSD 500 GB':['Портативный SSD 500 ГБ','500 ГБ портативті SSD','Файлдарды сақтау мен тасымалдауға арналған сыртқы SSD.','Внешний SSD на 500 ГБ с USB-C для хранения файлов и резервных копий.'],
+  '24-inch IPS Monitor':['IPS-монитор 24 дюйма','24 дюймдік IPS монитор','Оқу мен жұмысқа арналған Full HD IPS монитор.','24-дюймовый Full HD IPS-монитор для учёбы и работы.'],
+  'Logitech K120':['Клавиатура Logitech K120','Logitech K120 пернетақтасы','Үй мен кеңсеге арналған толық өлшемді сымды пернетақта.'],
+  'Logitech K380s Pebble Keys 2':['Клавиатура Logitech K380s Pebble Keys 2','Logitech K380s Pebble Keys 2 пернетақтасы','Бірнеше құрылғыға қосылатын ықшам Bluetooth пернетақтасы.'],
+  'Redragon K552 Kumara':['Механическая клавиатура Redragon K552 Kumara','Redragon K552 Kumara механикалық пернетақтасы','Ойын мен мәтін теруге арналған жарығы бар механикалық пернетақта.'],
+  'Logitech M185':['Мышь Logitech M185','Logitech M185 тінтуірі','Ноутбукке арналған USB қабылдағышы бар сымсыз тінтуір.'],
+  'Logitech G102 LIGHTSYNC':['Игровая мышь Logitech G102 LIGHTSYNC','Logitech G102 LIGHTSYNC ойын тінтуірі','Реттелетін сенсоры мен RGB жарығы бар сымды ойын тінтуірі.'],
+  'Logitech C920 HD Pro':['Веб-камера Logitech C920 HD Pro','Logitech C920 HD Pro веб-камерасы','Онлайн сабақ пен кездесуге арналған Full HD веб-камера.'],
+  'A4Tech PK-910H':['Веб-камера A4Tech PK-910H','A4Tech PK-910H веб-камерасы','Бейнеқоңырауға арналған Full HD веб-камера.'],
+  'Samsung T7 Portable SSD 1 TB':['Портативный SSD Samsung T7 1 ТБ','Samsung T7 1 ТБ портативті SSD','Үлкен файлдарды сақтауға арналған сыртқы SSD.'],
+  'Kingston XS1000 Portable SSD 1 TB':['Портативный SSD Kingston XS1000 1 ТБ','Kingston XS1000 1 ТБ портативті SSD','Жоба мен резервтік көшірмеге арналған ықшам сыртқы SSD.'],
+  'WD Blue SN580 NVMe SSD 1 TB':['SSD WD Blue SN580 NVMe 1 ТБ','WD Blue SN580 NVMe 1 ТБ SSD','Үйлесімді компьютер мен ноутбукке арналған M.2 жинақтауышы.'],
+  'Samsung Essential Monitor S3 24 inch':['Монитор Samsung Essential Monitor S3 24″','Samsung Essential Monitor S3 24″ мониторы','Жұмыс пен үйге арналған 24 дюймдік Full HD IPS монитор.'],
+  'Xiaomi Monitor A27i 27 inch':['Монитор Xiaomi A27i 27″','Xiaomi A27i 27″ мониторы','100 Гц жиілігі бар 27 дюймдік Full HD IPS монитор.'],
+  'AOC 24B2XH 23.8 inch':['Монитор AOC 24B2XH 23,8″','AOC 24B2XH 23,8″ мониторы','Кеңсеге арналған күңгірт экраны бар Full HD IPS монитор.'],
+  'HyperX Cloud Stinger 2 Core':['Гарнитура HyperX Cloud Stinger 2 Core','HyperX Cloud Stinger 2 Core гарнитурасы','Бұрылмалы микрофоны мен жұмсақ жастықшалары бар жеңіл гарнитура.'],
+  'JBL Quantum 100':['Гарнитура JBL Quantum 100','JBL Quantum 100 гарнитурасы','Алынбалы микрофоны бар сымды ойын гарнитурасы.'],
+  'TP-Link Archer C6 AC1200':['Роутер TP-Link Archer C6 AC1200','TP-Link Archer C6 AC1200 роутері','Үй мен шағын кеңсеге арналған екі диапазонды Wi-Fi роутері.'],
+  'TP-Link Archer T3U Plus AC1300':['Wi-Fi адаптер TP-Link Archer T3U Plus','TP-Link Archer T3U Plus Wi-Fi адаптері','Сыртқы антеннасы бар USB Wi-Fi адаптері.'],
+  'UGREEN 6-in-1 USB-C Hub':['USB-C хабы UGREEN 6-в-1','UGREEN 6-in-1 USB-C хабы','HDMI, USB-A және жад карталарына арналған ықшам адаптер.'],
+  'Baseus GaN5 Pro 65 W Charger':['Зарядное устройство Baseus GaN5 Pro 65 Вт','Baseus GaN5 Pro 65 Вт зарядтағышы','Ноутбук пен телефонға арналған ықшам GaN зарядтағышы.'],
+  'APC Back-UPS 650VA':['Источник бесперебойного питания APC 650VA','APC Back-UPS 650VA үздіксіз қуат көзі','Роутер мен компьютерге арналған аккумуляторлы қуат көзі.'],
+  'Logitech Brio 300':['Веб-камера Logitech Brio 300','Logitech Brio 300 веб-камерасы','Қақпағы мен кіріктірілген микрофоны бар Full HD камера.']
+};
+function localizeProduct(p){const d=localizedProducts[p.name],lang=window.cfLang;return {...p,name:d?(lang==='kk'?d[1]:lang==='ru'?d[0]:p.name):p.name,description:d?(lang==='kk'?d[2]:lang==='ru'?(d[3]||p.description||d[2]):`${p.name} — a practical ${p.category?.toLowerCase()||'accessory'} for study, work, and home use.`):p.description,category:categoryNames[p.category]?.[lang]||p.category};}
+function categoryName(name){return categoryNames[name]?.[window.cfLang]||name;}
+function productImage(p){return !p.image_url || p.image_url === '/assets/product.svg' ? (categoryArtwork[p.category] || '/assets/product.svg') : p.image_url;}
+const demoAccounts = {buyer:['buyer@example.kz','Buyer123!'],supplier:['supplier@techline.kz','Supplier123!'],admin:['admin@comeandfind.kz','Admin123!']};
+
+async function api(url, options={}) {
+  const cfg = {credentials:'same-origin',headers:{'Content-Type':'application/json'}, ...options};
+  const res = await fetch(url, cfg);
+  const data = await res.json().catch(()=>({}));
+  if(res.status===401 && me){me=null;renderAuth();$('#dashboard').classList.add('hidden');}
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+let toastTimer; function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.add('hidden'),3400)}
+function esc(s=''){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+
+async function init(){
+  try{me=await api('/api/me')}catch{me=null}
+  categories=await api('/api/categories');
+  $('#categorySelect').innerHTML=`<option value="">${esc(t('catalog.all'))}</option>`+categories.map(c=>`<option value="${c.id}">${esc(categoryName(c.name))}</option>`).join('');
+  bind(); renderAuth(); updateFavoriteCount(); updateCompareBar(); await loadProducts();
+  window.addEventListener('cf-language-change',()=>{if(!categories.length)return;$('#categorySelect').innerHTML=`<option value="">${esc(t('catalog.all'))}</option>`+categories.map(c=>`<option value="${c.id}">${esc(categoryName(c.name))}</option>`).join('');$('#voiceLanguage').value=window.cfLang==='kk'?'kk-KZ':window.cfLang==='en'?'en-US':'ru-RU';updateFavoriteCount();loadProducts();if(!$('#dashboard').classList.contains('hidden'))openDashboard();});
+}
+function bind(){
+  $('#loadMoreBtn').onclick=renderProducts;
+  document.querySelectorAll('[data-demo-role]').forEach(b=>b.addEventListener('click',()=>{const [email,password]=demoAccounts[b.dataset.demoRole];$('#loginEmail').value=email;$('#loginPassword').value=password;$('#authMessage').textContent=window.cfLang==='kk'?'Демо рөлі таңдалды. Кіру түймесін басыңыз.':'Выбрана демо-роль. Нажмите «Войти».';$('#loginPassword').focus();}));
+  $('#searchBtn').onclick=loadProducts; $('#categorySelect').onchange=loadProducts; $('#clearFilters').onclick=()=>{for(const id of ['searchInput','minPrice','maxPrice'])$('#'+id).value='';$('#categorySelect').value='';return loadProducts()};
+  $('#authBtn').onclick=openAuth; $('#heroLogin').onclick=openAuth; $('#authClose').onclick=()=>$('#authDialog').close(); $('#productClose').onclick=()=>$('#productDialog').close(); $('#cartClose').onclick=()=>$('#cartDialog').close();
+  $('#loginTab').onclick=()=>switchAuth('login'); $('#registerTab').onclick=()=>switchAuth('register'); $('#regRole').onchange=()=>$('#companyLabel').classList.toggle('hidden',$('#regRole').value!=='supplier');
+  $('#loginSubmit').onclick=login; $('#registerSubmit').onclick=register; $('#logoutBtn').onclick=logout; $('#cartBtn').onclick=openCart; $('#dashboardBtn').onclick=openDashboard;
+  $('#favoritesBtn').onclick=()=>{favoritesOnly=!favoritesOnly;$('#favoritesBtn').classList.toggle('active-filter',favoritesOnly);visibleProductCount=0;renderProducts();$('#catalog').scrollIntoView({behavior:'smooth'});};
+  $('#sortSelect').onchange=()=>{visibleProductCount=0;renderProducts()};
+  $('#compareOpen').onclick=openCompare; $('#compareClear').onclick=clearCompare; $('#compareClose').onclick=()=>$('#compareDialog').close();
+  $('#compareDialog').addEventListener('click',e=>{if(e.target===$('#compareDialog'))$('#compareDialog').close()});
+}
+function renderAuth(){
+ if(!me){$('#whoami').textContent='';$('#cartCount').textContent='0';$('#dashboardContent').innerHTML='';}
+ $('#heroLogin').textContent=me?t('nav.dashboard'):t('hero.demo');$('#heroLogin').onclick=me?openDashboard:openAuth;
+  $('#authBtn').classList.toggle('hidden',!!me); $('#logoutBtn').classList.toggle('hidden',!me); $('#dashboardBtn').classList.toggle('hidden',!me); $('#cartBtn').classList.toggle('hidden',!me||me.role!=='buyer');
+  if(me){$('#whoami').textContent=`${me.name} • ${roleLabel(me.role)}`; if(me.role==='buyer')refreshCartCount();}
+}
+function openAuth(){for(const id of ['productDialog','cartDialog'])$('#'+id).close();switchAuth('login');$('#authMessage').textContent='';$('#authDialog').showModal();$('#loginEmail').focus()}
+function switchAuth(mode){const login=mode==='login';$('#loginPane').classList.toggle('hidden',!login);$('#registerPane').classList.toggle('hidden',login);$('#loginTab').classList.toggle('active',login);$('#registerTab').classList.toggle('active',!login)}
+async function login(){try{me=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('#loginEmail').value,password:$('#loginPassword').value})});$('#authDialog').close();$('#loginPassword').value='';renderAuth();toast(t('toast.login'))}catch(e){msg(e.message)}}
+async function register(){try{me=await api('/api/auth/register',{method:'POST',body:JSON.stringify({name:$('#regName').value,email:$('#regEmail').value,password:$('#regPassword').value,role:$('#regRole').value,company:$('#regCompany').value})});$('#authDialog').close();$('#regPassword').value='';renderAuth();toast(t('toast.register'))}catch(e){msg(e.message)}}
+async function logout(){await api('/api/auth/logout',{method:'POST'});me=null;renderAuth();$('#dashboard').classList.add('hidden');toast(t('toast.logout'))}
+function msg(s){const m=$('#authMessage');m.textContent=s;m.className='message error'}
+
+let catalogueRequest=0;
+async function loadProducts(){
+ const request=++catalogueRequest;
+  const qs=new URLSearchParams(); if($('#searchInput').value)qs.set('search',$('#searchInput').value);if($('#categorySelect').value)qs.set('category',$('#categorySelect').value);
+  for(const [id,key] of [['minPrice','min_price'],['maxPrice','max_price']])if($('#'+id).value!=='')qs.set(key,$('#'+id).value);
+  const [products,intent]=await Promise.all([api('/api/products?'+qs.toString()),api('/api/search/interpret?q='+encodeURIComponent($('#searchInput').value))]); if(request!==catalogueRequest)return;
+  const hints=[];if(intent.category)hints.push((window.cfLang==='kk'?'Санат: ':window.cfLang==='en'?'Category: ':'Категория: ')+categoryName(intent.category));if(intent.terms.length)hints.push((window.cfLang==='kk'?'Сөздер: ':window.cfLang==='en'?'Terms: ':'Слова: ')+intent.terms.join(', '));
+  const min=$('#minPrice').value!==''?Number($('#minPrice').value):intent.min_price;const max=$('#maxPrice').value!==''?Number($('#maxPrice').value):intent.max_price;
+  if(min!==undefined&&min!==null)hints.push((window.cfLang==='kk'?'Ең төмені: ':window.cfLang==='en'?'From: ':'От: ')+fmt(min));if(max!==undefined&&max!==null)hints.push((window.cfLang==='kk'?'Ең жоғарысы: ':window.cfLang==='en'?'To: ':'До: ')+fmt(max));if($('#categorySelect').value)hints.push(window.cfLang==='kk'?'Таңдалған санат та қолданылады':window.cfLang==='en'?'Selected category also applies':'Также применяется выбранная категория');
+  $('#searchHint').textContent=hints.length?(window.cfLang==='kk'?'Іздеу шарты: ':window.cfLang==='en'?'Search interpreted as: ':'Поиск понял так: ')+hints.join(' · '):t('catalog.hint');
+  $('#catalogMeta').textContent=`${products.length} ${t('catalog.found').toLowerCase()}`;
+  $('#resultSummary').textContent=products.length ? `${window.cfLang==='kk'?'Сәйкес келгені: ':window.cfLang==='en'?'Matching products: ':'Подходящих товаров: '}${products.length}` : t('catalog.none');
+  allProducts = products;
+  visibleProductCount = 0;
+  renderProducts();
+}
+
+function renderProducts(){
+  const grid = $('#productGrid');
+  let display=allProducts.filter(p=>!favoritesOnly||favoriteIds.includes(p.id));
+  const groups = new Map();
+  for (const offer of display) {
+    const group = groups.get(offer.model_key) || [];
+    group.push(offer);
+    groups.set(offer.model_key, group);
+  }
+  display = Array.from(groups.values(), group => {
+    group.sort((a,b) => Number(b.stock>0)-Number(a.stock>0) || a.price_kzt-b.price_kzt || a.id-b.id);
+    return {...group[0], offerCount:group.length};
+  });
+  const labels = {ru:['Моделей','Предложений'],kk:['Модельдер','Ұсыныстар'],en:['Models','Offers']}[window.cfLang];
+  $('#resultSummary').textContent = labels[0] + ': ' + display.length;
+  $('#catalogMeta').textContent = labels[1] + ': ' + display.reduce((total,p)=>total+p.offerCount,0);
+  const sort=$('#sortSelect')?.value||'recommended';
+  if(sort==='price-asc')display.sort((a,b)=>a.price_kzt-b.price_kzt);else if(sort==='price-desc')display.sort((a,b)=>b.price_kzt-a.price_kzt);else if(sort==='stock')display.sort((a,b)=>b.stock-a.stock);
+  if(!display.length){
+    const title=favoritesOnly?(window.cfLang==='kk'?'Таңдаулылар әзірге бос':window.cfLang==='en'?'No favourites yet':'В избранном пока пусто'):t('catalog.none');
+    const hint=favoritesOnly?(window.cfLang==='kk'?'Каталогтағы жүрек белгісін басып, тауар сақтаңыз.':window.cfLang==='en'?'Tap the heart on a product card to save it.':'Нажмите на сердечко в карточке товара, чтобы сохранить его.'):t('catalog.noneHint');
+    grid.innerHTML=`<div class="empty-state"><span class="empty-icon">${favoritesOnly?'♡':'⌕'}</span><h3>${esc(title)}</h3><p>${esc(hint)}</p><button class="ghost" id="emptyReset">${esc(favoritesOnly?(window.cfLang==='kk'?'Каталогқа қайту':window.cfLang==='en'?'Back to catalogue':'Показать каталог'):t('catalog.clearFilters'))}</button></div>`;
+    $('#emptyReset').onclick=()=>{if(favoritesOnly){favoritesOnly=false;$('#favoritesBtn').classList.remove('active-filter');renderProducts()}else $('#clearFilters').click()};
+    $('#loadMoreBtn').classList.add('hidden');
+    return;
+  }
+  const previous = visibleProductCount;
+  visibleProductCount = Math.min(visibleProductCount + PAGE_SIZE, display.length);
+  const cards = display.slice(previous, visibleProductCount).map(raw=>{const p=localizeProduct(raw);const saved=favoriteIds.includes(p.id),checked=compareIds.includes(p.id),fallback=categoryArtwork[raw.category]||'/assets/product.svg';return `<article class="product-card"><div class="product-media"><img src="${esc(productImage(raw))}" alt="${esc(p.name)}" loading="lazy" onerror="this.onerror=null;this.src='${fallback}'"><span class="media-tag">${esc(p.category)}</span><button class="favorite-chip ${saved?'is-favorite':''}" onclick="toggleFavorite(${p.id})" aria-label="${esc(saved?t('catalog.saved'):t('catalog.save'))}" title="${esc(saved?t('catalog.saved'):t('catalog.save'))}">${saved?'♥':'♡'}</button></div><div class="product-body"><div class="product-top"><h3>${esc(p.name)}</h3><span class="stock ${p.stock<5?'low-stock':''}">${p.stock>0?(p.stock<5?t('catalog.left'):t('catalog.inStock')):t('catalog.out')}</span></div><p class="product-description">${esc(p.description)}</p><p class="supplier-line"><span aria-hidden="true">◈</span> ${esc(p.supplier)} ${p.verified?`<span class="verified-mark">✓ ${window.cfLang==='kk'?'тексерілген':window.cfLang==='en'?'verified':'проверен'}</span>`:''}</p><div class="card-bottom"><div class="price">${fmt(p.price_kzt)}</div><div class="product-actions"><button class="ghost" onclick="viewProduct(${p.id})">${raw.offerCount>1 ? offerTitle()+' · '+raw.offerCount : esc(t('catalog.details'))}</button><button class="btn" ${p.stock<1?'disabled':''} onclick="addToCart(${p.id})">${p.stock<1?t('catalog.out'):t('catalog.add')}</button></div><label class="compare-check"><input type="checkbox" ${checked?'checked':''} onchange="toggleCompare(${p.id})"><span>${esc(t(checked?'catalog.compareRemove':'catalog.compareAdd'))}</span></label></div></div></article>`}).join('');
+  if(previous===0)grid.innerHTML=cards; else grid.insertAdjacentHTML('beforeend',cards);
+  $('#loadMoreBtn').classList.toggle('hidden',visibleProductCount>=display.length);
+  $('#loadMoreBtn').textContent=`${t('catalog.more')} (${display.length-visibleProductCount}) ↓`;
+}
+
+function offerTitle() {
+  return {ru:'Предложения',kk:'Ұсыныстар',en:'Offers'}[window.cfLang];
+}
+function sellerOffers(offers) {
+  return '<section class="seller-offers"><h3>'+offerTitle()+'</h3>'+offers.map(offer =>
+    `<div><strong>${esc(offer.supplier)}</strong><span>${fmt(offer.price_kzt)}</span>
+      <small>${offer.stock} ${t('cart.in')}</small><button class="btn small" data-offer="${offer.id}"
+      ${offer.stock ? '' : 'disabled'} onclick="addToCart(${offer.id})">${t('catalog.add')}</button></div>`
+  ).join('')+'</section>';
+}
+window.viewProduct=async id=>{const raw=await api('/api/products/'+id);const p=localizeProduct(raw),fallback=categoryArtwork[raw.category]||'/assets/product.svg';const specs=Object.entries(p.specs||{}).map(([k,v])=>`<div class="spec"><b>${esc(k)}</b><br><span class="muted">${esc(v)}</span></div>`).join('');const supplierDescription=window.cfLang==='en'?'Demonstration supplier of computer and office equipment.':raw.supplier.description;$('#productDetail').innerHTML=`<div class="detail"><img src="${esc(productImage(raw))}" alt="${esc(p.name)}" onerror="this.onerror=null;this.src='${fallback}'"><div><span class="chip">${esc(p.category)}</span><h2>${esc(p.name)}</h2><p class="muted">${esc(p.description)}</p><div class="price">${fmt(p.price_kzt)}</div><p class="stock">${p.stock} ${t('cart.in')}</p><div class="specs"><h3>${t('cart.specs')}</h3>${specs}</div><div class="supplier-box"><b>${t('cart.supplier')}: ${esc(p.supplier.company_name)} ${p.supplier.verified?'✓':''}</b><p>${esc(supplierDescription)}</p></div>${sellerOffers(raw.offers)}</div></div>`;$('#productDialog').showModal()}
+window.toggleFavorite=id=>{favoriteIds=favoriteIds.includes(id)?favoriteIds.filter(x=>x!==id):[...favoriteIds,id];localStorage.setItem('cf-favorites',JSON.stringify(favoriteIds));updateFavoriteCount();visibleProductCount=0;renderProducts()};
+function updateFavoriteCount(){$('#favoriteCount').textContent=favoriteIds.length;$('#favoritesBtn').setAttribute('aria-label',window.cfLang==='kk'?`Таңдаулылар: ${favoriteIds.length}`:window.cfLang==='en'?`Favourites: ${favoriteIds.length}`:`Избранное: ${favoriteIds.length}`)}
+window.toggleCompare=id=>{if(compareIds.includes(id))compareIds=compareIds.filter(x=>x!==id);else if(compareIds.length<3)compareIds.push(id);else{toast(t('catalog.compareLimit'));renderProducts();return}localStorage.setItem('cf-compare',JSON.stringify(compareIds));updateCompareBar();visibleProductCount=0;renderProducts()};
+function updateCompareBar(){$('#compareBar').classList.toggle('hidden',compareIds.length===0);$('#compareSummary').textContent=window.cfLang==='kk'?`Салыстыруға таңдалды: ${compareIds.length} / 3`:window.cfLang==='en'?`Selected to compare: ${compareIds.length} / 3`:`Для сравнения выбрано: ${compareIds.length} / 3`}
+function clearCompare(){compareIds=[];localStorage.setItem('cf-compare','[]');updateCompareBar();visibleProductCount=0;renderProducts()}
+async function openCompare(){if(compareIds.length<2){toast(t('catalog.compareNeed'));return}const products=await Promise.all(compareIds.map(id=>api('/api/products/'+id)));const localized=products.map(localizeProduct),kk=window.cfLang==='kk',en=window.cfLang==='en';const keys=[...new Set(localized.flatMap(p=>Object.keys(p.specs||{})))];const rows=[[kk?'Атауы':en?'Product':'Название',localized.map(p=>p.name)],[kk?'Санат':en?'Category':'Категория',localized.map(p=>p.category)],[kk?'Сипаттамасы':en?'Description':'Описание',localized.map(p=>p.description)],[kk?'Бағасы':en?'Price':'Цена',localized.map(p=>fmt(p.price_kzt))],[kk?'Қоры':en?'Stock':'Наличие',localized.map(p=>`${p.stock} ${t('cart.in')}`)],...keys.map(key=>[key,localized.map(p=>p.specs?.[key]||'—')])];$('#compareContent').innerHTML=`<div class="compare-table-wrap"><table class="compare-table"><tbody>${rows.map(([key,values])=>`<tr><th>${esc(key)}</th>${values.map(value=>`<td>${esc(value)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;$('#compareDialog').showModal()}
+window.addToCart=async id=>{if(!me){openAuth();return}if(me.role!=='buyer'){toast(t('cart.onlyBuyer'));return}try{await api('/api/cart',{method:'POST',body:JSON.stringify({product_id:id,quantity:1})});toast(t('cart.added'));await refreshCartCount()}catch(e){toast(e.message)}}
+async function refreshCartCount(){try{const c=await api('/api/cart');$('#cartCount').textContent=c.items.reduce((a,x)=>a+x.quantity,0)}catch{}}
+async function openCart(){const c=await api('/api/cart');$('#cartContent').innerHTML=c.items.length?c.items.map(i=>{const p=localizeProduct(i);return `<div class="cart-row"><img src="${esc(i.image_url)}"><div><b>${esc(p.name)}</b><br><span class="quantity"><button class="ghost" aria-label="−" ${i.quantity<=1?'disabled':''} onclick="setQuantity(${i.id},${i.quantity-1})">−</button><span>${t('cart.qty')}: ${i.quantity}</span><button class="ghost" aria-label="+" ${i.quantity>=i.stock?'disabled':''} onclick="setQuantity(${i.id},${i.quantity+1})">+</button></span></div><div class="price">${fmt(i.price_kzt*i.quantity)}</div><button class="ghost" onclick="removeCart(${i.id})">${t('cart.remove')}</button></div>`}).join('')+`<div class="cart-total"><span>${t('cart.total')}</span><span>${fmt(c.total_kzt)}</span></div><button class="btn full" onclick="createOrder()">${t('cart.checkout')}</button>`:`<p class="muted">${t('cart.empty')}</p>`;if(!$('#cartDialog').open)$('#cartDialog').showModal()}
+window.setQuantity=async(id,quantity)=>{await api('/api/cart',{method:'PATCH',body:JSON.stringify({product_id:id,quantity})});await refreshCartCount();await openCart()};
+window.removeCart=async id=>{await api('/api/cart/'+id,{method:'DELETE'});await refreshCartCount();await openCart()}
+window.createOrder=async()=>{try{const o=await api('/api/orders',{method:'POST'});$('#cartDialog').close();await refreshCartCount();toast(`${t('cart.order')} ${o.id} ${t('cart.created')}`);await loadProducts()}catch(e){toast(e.message)}}
+
+async function openDashboard(){if(!me)return;$('#dashboard').classList.remove('hidden');$('#dashboard').scrollIntoView({behavior:'smooth'});$('#dashboardTitle').textContent=me.role==='buyer'?t('dashboard.orders'):me.role==='supplier'?t('dashboard.supplier'):t('dashboard.admin');if(me.role==='buyer')await buyerDashboard();if(me.role==='supplier')await supplierDashboard();if(me.role==='admin')await adminDashboard()}
+function statusLabel(value){const labels={created:window.cfLang==='kk'?'Құрылды':window.cfLang==='en'?'Created':'Создан',paid:window.cfLang==='kk'?'Төленді':window.cfLang==='en'?'Paid':'Оплачен',processing:window.cfLang==='kk'?'Өңделуде':window.cfLang==='en'?'Processing':'В обработке',shipped:window.cfLang==='kk'?'Жөнелтілді':window.cfLang==='en'?'Shipped':'Отправлен',delivered:window.cfLang==='kk'?'Жеткізілді':window.cfLang==='en'?'Delivered':'Доставлен',cancelled:window.cfLang==='kk'?'Бас тартылды':window.cfLang==='en'?'Cancelled':'Отменён',pending:window.cfLang==='kk'?'Күтілуде':window.cfLang==='en'?'Pending':'Ожидает',simulated_paid:window.cfLang==='kk'?'Демо-төлем':window.cfLang==='en'?'Demo payment':'Демо-оплата',failed:window.cfLang==='kk'?'Сәтсіз':window.cfLang==='en'?'Failed':'Ошибка'};return labels[value]||value}
+async function buyerDashboard(){const orders=await api('/api/orders');$('#dashboardContent').innerHTML=`<div class="panel"><h3>${t('dashboard.orders')}</h3>${orders.length?`<table class="data-table"><thead><tr><th>ID</th><th>${t('dashboard.total')}</th><th>${t('dashboard.payment')}</th><th>${t('dashboard.status')}</th><th>${t('dashboard.created')}</th><th>${t('dashboard.action')}</th></tr></thead><tbody>${orders.map(o=>`<tr><td>#${o.id}</td><td>${fmt(o.total_kzt)}</td><td>${esc(statusLabel(o.payment_status))}</td><td><span class="status ${o.status==='delivered'?'ok':'wait'}">${esc(statusLabel(o.status))}</span></td><td>${new Date(o.created_at).toLocaleString(window.cfLang==='kk'?'kk-KZ':'ru-KZ')}</td><td>${o.status==='created'?`<button class="btn small" onclick="payOrder(${o.id})">${t('dashboard.pay')}</button>`:'—'}</td></tr>`).join('')}</tbody></table>`:`<p class="muted">${t('dashboard.noOrders')}</p>`}</div>`}
+window.payOrder=async id=>{try{await api(`/api/orders/${id}/pay`,{method:'POST'});toast(t('cart.payment'));await buyerDashboard()}catch(e){toast(e.message)}}
+
+async function supplierDashboard(){const [products,orders]=await Promise.all([api('/api/supplier/products'),api('/api/supplier/orders')]);const kk=window.cfLang==='kk',en=window.cfLang==='en';$('#dashboardContent').innerHTML=`<div class="panel"><h3>${t('dashboard.addProduct')}</h3><div class="form-grid"><input id="spName" class="field" placeholder="${kk?'Тауар атауы':en?'Product name':'Название товара'}"><select id="spCat" class="field">${categories.map(c=>`<option value="${c.id}">${esc(categoryName(c.name))}</option>`).join('')}</select><input id="spPrice" class="field" type="number" min="0" placeholder="${kk?'Бағасы, ₸':en?'Price, ₸':'Цена, ₸'}"><input id="spStock" class="field" type="number" min="0" placeholder="${kk?'Қоры':en?'Stock':'Количество'}"><input id="spImage" class="field fullrow" placeholder="${kk?'Сурет сілтемесі':en?'Image URL':'Ссылка на изображение'}"><input id="spSpecs" class="field fullrow" placeholder='${kk?'Сипаттамалар JSON':en?'Specifications JSON':'Характеристики JSON'}: {"Connection":"USB"}'><input id="spDesc" class="field fullrow" placeholder="${kk?'Қысқаша сипаттама':en?'Short description':'Краткое описание'}"><button class="btn fullrow" onclick="supplierAddProduct()">${t('dashboard.submit')}</button></div></div><div class="panel"><h3>${t('dashboard.myProducts')}</h3><table class="data-table"><thead><tr><th>ID</th><th>${kk?'Тауар':en?'Product':'Товар'}</th><th>${kk?'Санат':en?'Category':'Категория'}</th><th>${t('dashboard.total')}</th><th>${kk?'Қоры':en?'Stock':'Остаток'}</th><th>${t('dashboard.status')}</th></tr></thead><tbody>${products.map(p=>`<tr><td>${p.id}</td><td>${esc(p.name)}</td><td>${esc(categoryName(p.category))}</td><td>${fmt(p.price_kzt)}</td><td>${p.stock}</td><td><span class="status ${p.approved?'ok':'wait'}">${p.approved?t('dashboard.approved'):t('dashboard.pending')}</span></td></tr>`).join('')}</tbody></table></div><div class="panel"><h3>${t('dashboard.relatedOrders')}</h3>${orders.length?`<table class="data-table"><thead><tr><th>ID</th><th>${t('auth.buyer')}</th><th>${t('dashboard.total')}</th><th>${t('dashboard.payment')}</th><th>${t('dashboard.status')}</th><th>${t('dashboard.action')}</th></tr></thead><tbody>${orders.map(o=>`<tr><td>#${o.id}</td><td>${esc(o.buyer)}</td><td>${fmt(o.total_kzt)}</td><td>${esc(statusLabel(o.payment_status))}</td><td>${esc(statusLabel(o.status))}</td><td>${supplierNextButton(o)}</td></tr>`).join('')}</tbody></table>`:`<p class="muted">${t('dashboard.noSupplierOrders')}</p>`}</div>`}
+function supplierNextButton(o){if(o.payment_status!=='simulated_paid')return t('dashboard.waitPay');const map={paid:'processing',processing:'shipped',shipped:'delivered'};const next=map[o.status];return next?`<button class="btn small" onclick="supplierStatus(${o.id},'${next}')">${window.cfLang==='kk'?'Белгілеу: ':'Отметить: '}${statusLabel(next)}</button>`:'—'}
+window.supplierAddProduct=async()=>{try{await api('/api/supplier/products',{method:'POST',body:JSON.stringify({name:$('#spName').value,category_id:Number($('#spCat').value),price_kzt:Number($('#spPrice').value),stock:Number($('#spStock').value),description:$('#spDesc').value,image_url:$('#spImage').value.trim(),specs:$('#spSpecs').value.trim()?JSON.parse($('#spSpecs').value):{}})});toast(t('toast.productSubmitted'));await supplierDashboard()}catch(e){toast(e.message)}}
+window.supplierStatus=async(id,status)=>{try{await api(`/api/supplier/orders/${id}/status`,{method:'POST',body:JSON.stringify({status})});toast(t('toast.status'));await supplierDashboard()}catch(e){toast(e.message)}}
+
+async function adminDashboard(){const [stats,products,users,orders]=await Promise.all([api('/api/admin/stats'),api('/api/admin/products'),api('/api/admin/users'),api('/api/admin/orders')]);const kk=window.cfLang==='kk',en=window.cfLang==='en';const words=kk?{pending:'Күтілуде',price:'Бағасы',active:'Белсенді',deactivate:'Өшіру',activate:'Қосу',withdraw:'Жасыру',reject:'Қабылдамау'}:en?{pending:'Pending',price:'Price',active:'Active',deactivate:'Deactivate',activate:'Activate',withdraw:'Hide',reject:'Reject'}:{pending:'Ожидает',price:'Цена',active:'Активен',deactivate:'Отключить',activate:'Включить',withdraw:'Скрыть',reject:'Отклонить'};$('#dashboardContent').innerHTML=`<div class="dashboard-grid"><div class="metric"><span class="muted">${t('dashboard.users')}</span><b>${stats.users}</b></div><div class="metric"><span class="muted">${t('dashboard.products')}</span><b>${stats.products}</b></div><div class="metric"><span class="muted">${words.pending}</span><b>${stats.pending_products}</b></div><div class="metric"><span class="muted">${t('dashboard.ordersCount')}</span><b>${stats.orders}</b></div></div><div class="panel"><h3>${t('dashboard.approval')}</h3><table class="data-table"><thead><tr><th>ID</th><th>${kk?'Тауар':en?'Product':'Товар'}</th><th>${kk?'Сатушы':en?'Supplier':'Продавец'}</th><th>${kk?'Санат':en?'Category':'Категория'}</th><th>${words.price}</th><th>${t('dashboard.status')}</th><th>${t('dashboard.action')}</th></tr></thead><tbody>${products.map(p=>`<tr><td>${p.id}</td><td>${esc(localizeProduct(p).name)}</td><td>${esc(p.supplier)}</td><td>${esc(categoryName(p.category))}</td><td>${fmt(p.price_kzt)}</td><td><span class="status ${p.approved?'ok':'wait'}">${p.approved?t('dashboard.approved'):t('dashboard.pending')}</span></td><td>${p.approved?`<button class="ghost" onclick="moderateProduct(${p.id},'withdraw')">${words.withdraw}</button>`:`<button class="btn small" onclick="approveProduct(${p.id})">${t('dashboard.approve')}</button><button class="ghost" onclick="moderateProduct(${p.id},'reject')">${words.reject}</button>`}</td></tr>`).join('')}</tbody></table></div><div class="panel"><h3>${t('dashboard.allOrders')}</h3>${orders.length?`<table class="data-table"><thead><tr><th>ID</th><th>${t('auth.buyer')}</th><th>${t('dashboard.total')}</th><th>${t('dashboard.payment')}</th><th>${t('dashboard.status')}</th><th>${t('dashboard.created')}</th></tr></thead><tbody>${orders.map(o=>`<tr><td>#${o.id}</td><td>${esc(o.buyer)}</td><td>${fmt(o.total_kzt)}</td><td>${esc(statusLabel(o.payment_status))}</td><td>${esc(statusLabel(o.status))} ${adminNextButton(o)}</td><td>${new Date(o.created_at).toLocaleString(kk?'kk-KZ':en?'en-US':'ru-KZ')}</td></tr>`).join('')}</tbody></table>`:`<p class="muted">${t('dashboard.noOrders')}</p>`}</div><div class="panel"><h3>${t('dashboard.users')}</h3><table class="data-table"><thead><tr><th>ID</th><th>${kk?'Аты':en?'Name':'Имя'}</th><th>Email</th><th>${t('auth.role')}</th><th>${words.active}</th><th>${t('dashboard.action')}</th></tr></thead><tbody>${users.map(u=>`<tr><td>${u.id}</td><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(roleLabel(u.role))}</td><td>${u.active?t('dashboard.yes'):t('dashboard.no')}</td><td>${u.role==='admin'?t('dashboard.protected'):`<button class="ghost" onclick="toggleUser(${u.id},${!u.active})">${u.active?words.deactivate:words.activate}</button>`}</td></tr>`).join('')}</tbody></table></div>`}
+function roleLabel(role){return ({buyer:t('auth.buyer'),supplier:t('auth.supplier'),admin:t('auth.admin')})[role]||role}
+window.approveProduct=async id=>{try{await api(`/api/admin/products/${id}/approve`,{method:'POST'});toast(t('toast.approved'));await adminDashboard();await loadProducts()}catch(e){toast(e.message)}}
+
+function adminNextButton(o){const next={paid:'processing',processing:'shipped',shipped:'delivered'}[o.status];return next&&o.payment_status==='simulated_paid'?`<button class="ghost" onclick="adminStatus(${o.id},'${next}')">${statusLabel(next)}</button>`:''}
+window.adminStatus=async(id,status)=>{await api('/api/admin/orders/'+id,{method:'POST',body:JSON.stringify({status})});await adminDashboard()};
+window.moderateProduct=async(id,action)=>{await api('/api/admin/products/'+id+'/'+action,{method:'POST',body:'{}'});await adminDashboard();await loadProducts()};
+window.toggleUser=async(id,active)=>{await api('/api/admin/users/'+id,{method:'POST',body:JSON.stringify({active})});await adminDashboard();await loadProducts()};
+// Catch async UI failures and block duplicate clicks while a mutation is pending.
+function safeAction(fn){return async function(...args){if(safeAction.busy)return;safeAction.busy=true;const buttons=[...document.querySelectorAll('button:not(#voiceBtn)')];const previous=buttons.map(b=>b.disabled);buttons.forEach(b=>b.disabled=true);try{return await fn.apply(this,args)}catch(e){toast(e.message||'Operation failed');if(fn===loadProducts){$('#searchHint').textContent=t('toast.searchError')+': '+e.message;$('#productGrid').innerHTML='';$('#catalogMeta').textContent=''}}finally{safeAction.busy=false;buttons.forEach((b,i)=>{if(b.isConnected)b.disabled=previous[i]})}}}
+for(const name of ['viewProduct','addToCart','removeCart','setQuantity','createOrder','payOrder','supplierAddProduct','supplierStatus','approveProduct','moderateProduct','toggleUser','adminStatus'])window[name]=safeAction(window[name]);
+const originalBind=bind;bind=function(){originalBind();for(const id of ['searchBtn','clearFilters','loginSubmit','registerSubmit','logoutBtn','cartBtn','dashboardBtn','heroLogin']){const e=$('#'+id);if(e.onclick)e.onclick=safeAction(e.onclick)}$('#categorySelect').onchange=safeAction(loadProducts);$('#searchInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();safeAction(loadProducts)()}}};
+init().catch(e=>{console.error(e);toast(t('toast.searchError')+': '+e.message)});
