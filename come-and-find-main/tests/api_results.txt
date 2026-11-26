@@ -1,0 +1,67 @@
+PASS Catalogue 12
+PASS Search 
+PASS Anonymous orders denied 
+PASS Login buyer@example.kz 
+PASS Login supplier@techline.kz 
+PASS Login admin@comeandfind.kz 
+PASS Buyer admin access denied 
+PASS Add to cart 
+PASS Repeated add increments 2
+PASS Create order {'id': 1, 'status': 'created', 'total_kzt': 15980}
+PASS Cart cleared 
+PASS Simulate payment 
+PASS Supplier sees order 
+PASS Status processing 
+PASS Status shipped 
+PASS Status delivered 
+PASS Backwards status denied 
+PASS Supplier submit {'approved': False, 'id': 13}
+PASS Pending hidden 
+PASS Admin approve 
+PASS Approved visible 
+PASS Stock rejection 
+PASS Admin lists users 
+PASS Admin lists orders 
+PASS Price filter 
+PASS Invalid price range 
+PASS Invalid category 
+PASS Invalid quantity 
+PASS Set quantity 
+PASS Quantity persisted 
+PASS Mixed supplier rejected 
+PASS Withdraw listing 
+PASS Hidden details 
+PASS Hidden item checkout rejected 
+PASS Cart preserved after failed order 
+PASS Register buyer 
+PASS Other buyer cannot pay order 
+PASS Deactivate user 
+PASS Existing session revoked by inactive flag 
+PASS Inactive login denied 
+PASS Read method enforced 
+PASS Bad supplier category 
+PASS Long password rejected 
+PASS Cross-origin write blocked 
+PASS Empty secondary buyer history 
+PASS NaN price rejected 
+PASS Malformed email rejected 
+PASS Admin self-deactivation forbidden 
+PASS Reactivate user 
+PASS Reactivated user login 
+PASS Second checkout 
+PASS Skip status denied 
+PASS Admin advances status 
+PASS Admin backward status denied 
+PASS Unrelated supplier denied 
+PASS Empty cart checkout rejected 
+PASS Admin wrong method rejected 
+PASS Smart Russian intent 
+PASS Smart Russian results 
+PASS Smart English price words 
+PASS Smart grouped thousands 
+PASS Smart invalid range 
+PASS Smart mixed category rejected 
+PASS Smart length limit 
+PASS Explicit price takes precedence 
+PASS Interpret GET only 
+RESULT: 66/66 passed
